@@ -14,8 +14,13 @@ class Settings(BaseSettings):
     # OpenAI
     OPENAI_API_KEY: str = ""
     
-    # CORS
-    ALLOWED_ORIGINS: List[str] = ["http://localhost:3000", "http://localhost:3001"]
+    # CORS - comma-separated string that gets split into list
+    ALLOWED_ORIGINS: str = "http://localhost:3000,http://localhost:3001"
+    
+    @property
+    def origins_list(self) -> List[str]:
+        """Convert comma-separated origins to list"""
+        return [origin.strip() for origin in self.ALLOWED_ORIGINS.split(",")]
     
     class Config:
         env_file = ".env"
