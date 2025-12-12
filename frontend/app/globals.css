@@ -35,7 +35,7 @@ body {
   padding: 20px;
   display: inline-flex;
   align-items: center;
-  justify-center;
+  justify-content: center;
 }
 
 /* Custom scrollbar */
