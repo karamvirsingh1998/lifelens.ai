@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Plus, Trash2, Edit2, Send } from "lucide-react";
+import { Plus, ArrowLeft, Sparkles } from "lucide-react";
 import { useUserStore, useEventsStore } from "@/lib/store";
 import { apiClient, LifeEvent } from "@/lib/api";
 import EventModal from "@/components/EventModal";
@@ -73,120 +73,153 @@ export default function Events() {
   };
 
   const sortedEvents = [...events].sort((a, b) => {
-    if (a.year !== b.year) return a.year - b.year;
-    return (a.month || 0) - (b.month || 0);
+    if (a.year !== b.year) return b.year - a.year;
+    return (b.month || 0) - (a.month || 0);
   });
 
   return (
-    <div className="min-h-screen p-4 py-12">
+    <div className="min-h-screen bg-dark-bg p-4 sm:p-6 md:p-8 pb-24">
+      {/* Container for mobile/tablet/desktop */}
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-12"
+        {/* Back Button */}
+        <button
+          onClick={() => router.push("/onboarding")}
+          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8"
         >
-          <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-primary-400 to-accent-violet bg-clip-text text-transparent">
-            Your Life Journey
-          </h1>
-          <p className="text-white/60 text-lg">
-            Add the significant events that shaped your emotional landscape, {userName}
-          </p>
-        </motion.div>
+          <ArrowLeft className="w-5 h-5" />
+          <span className="text-sm sm:text-base">Back</span>
+        </button>
 
-        {/* Events List */}
-        <div className="mb-8 space-y-4">
-          <AnimatePresence>
-            {sortedEvents.map((event, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="glass-card p-6 flex items-start justify-between hover:bg-white/10"
-              >
-                <div className="flex-1">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-2xl font-bold text-primary-400">
-                      {event.year}
-                    </span>
-                    {event.month && (
-                      <span className="text-white/60">
-                        {new Date(2000, event.month - 1).toLocaleString("default", { month: "short" })}
-                      </span>
-                    )}
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        backgroundColor: getPhaseColor(event.phase) + "20",
-                        color: getPhaseColor(event.phase),
-                      }}
-                    >
-                      {event.phase}
-                    </span>
-                    <span className="text-white/40 text-sm">Score: {event.score}</span>
-                  </div>
-                  <p className="text-white/80">{event.description}</p>
-                </div>
-                
-                <div className="flex gap-2 ml-4">
-                  <button
-                    onClick={() => handleEditEvent(index)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
-                    title="Edit"
-                  >
-                    <Edit2 className="w-4 h-4 text-white/60" />
-                  </button>
-                  <button
-                    onClick={() => handleDeleteEvent(index)}
-                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
-                    title="Delete"
-                  >
-                    <Trash2 className="w-4 h-4 text-red-400" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+        {/* Header */}
+        <div className="mb-8 sm:mb-12">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
+            Hey <span className="text-orange-400">{userName}</span>, tell us your story
+          </h1>
+          <p className="text-gray-400 text-sm sm:text-base md:text-lg">
+            Add the ups and downs of your life journey. The more detail, the better your insights.
+          </p>
         </div>
 
-        {/* Add Event Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={handleAddEvent}
-          className="btn-secondary w-full mb-8 flex items-center justify-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Add Life Event
-        </motion.button>
+        {/* Events List or Empty State */}
+        {sortedEvents.length === 0 ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="glass-card text-center py-16 sm:py-20 mb-6"
+          >
+            <div className="icon-bg mx-auto mb-6 w-16 h-16 sm:w-20 sm:h-20">
+              <Plus className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">
+              No events yet
+            </h3>
+            <p className="text-gray-400 text-sm sm:text-base mb-8 max-w-sm mx-auto">
+              Start adding significant moments from your life
+            </p>
+            <button
+              onClick={handleAddEvent}
+              className="btn-primary max-w-xs mx-auto text-sm sm:text-base"
+            >
+              <Plus className="w-5 h-5 inline mr-2" />
+              Add Your First Event
+            </button>
+          </motion.div>
+        ) : (
+          <div className="space-y-4 mb-6">
+            <AnimatePresence>
+              {sortedEvents.map((event, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="event-card group cursor-pointer"
+                  onClick={() => handleEditEvent(index)}
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2 flex-wrap">
+                        <span className="text-lg sm:text-xl font-bold text-white">
+                          {event.year}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
+                          event.phase === "Very High" ? "bg-green-500/20 text-green-400" :
+                          event.phase === "High" ? "bg-blue-500/20 text-blue-400" :
+                          event.phase === "Moderate" ? "bg-gray-500/20 text-gray-400" :
+                          event.phase === "Low" ? "bg-orange-500/20 text-orange-400" :
+                          "bg-red-500/20 text-red-400"
+                        }`}>
+                          {event.phase}
+                        </span>
+                        <span className="text-gray-500 text-xs sm:text-sm">
+                          {event.score > 0 ? "+" : ""}{event.score}
+                        </span>
+                      </div>
+                      <p className="text-gray-300 text-sm sm:text-base line-clamp-2">
+                        {event.description}
+                      </p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteEvent(index);
+                      }}
+                      className="text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
+                    >
+                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+        )}
+
+        {/* Fixed Bottom Actions */}
+        <div className="fixed bottom-0 left-0 right-0 bg-dark-bg/95 backdrop-blur-lg border-t border-white/10 p-4 sm:p-6">
+          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+            <button
+              onClick={handleAddEvent}
+              className="btn-secondary flex items-center justify-center gap-2 text-sm sm:text-base"
+            >
+              <Plus className="w-5 h-5" />
+              Add Event
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={loading || events.length === 0}
+              className="btn-primary flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                  Analyzing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-5 h-5" />
+                  Analyze My Journey
+                </>
+              )}
+            </button>
+          </div>
+        </div>
 
         {/* Error Message */}
         {error && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="bg-red-500/10 border border-red-500/50 rounded-lg p-4 text-red-400 text-center mb-6"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm z-50"
           >
             {error}
           </motion.div>
         )}
-
-        {/* Submit Button */}
-        <motion.button
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          onClick={handleSubmit}
-          disabled={loading || events.length === 0}
-          className="btn-primary w-full flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <Send className="w-5 h-5" />
-          {loading ? "Saving..." : "Analyze My Journey"}
-        </motion.button>
-
-        <p className="text-center text-white/40 text-sm mt-4">
-          {events.length} {events.length === 1 ? "event" : "events"} added
-        </p>
       </div>
 
       {/* Event Modal */}
@@ -199,15 +232,3 @@ export default function Events() {
     </div>
   );
 }
-
-function getPhaseColor(phase: string): string {
-  const colors: Record<string, string> = {
-    "Very High": "#10b981",
-    "High": "#3b82f6",
-    "Moderate": "#f59e0b",
-    "Low": "#ef4444",
-    "Very Low": "#991b1b",
-  };
-  return colors[phase] || colors["Moderate"];
-}
-

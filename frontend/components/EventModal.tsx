@@ -13,7 +13,7 @@ interface EventModalProps {
   event?: LifeEvent;
 }
 
-const phases = ["Very Low", "Low", "Moderate", "High", "Very High"];
+const phases = ["Very Low", "Low", "Neutral", "Good", "Very Good"];
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const months = [
@@ -31,51 +31,78 @@ const months = [
   { value: 12, label: "December" },
 ];
 
+const phaseToScore: Record<string, number> = {
+  "Very Low": -8,
+  "Low": -4,
+  "Neutral": 0,
+  "Good": 6,
+  "Very Good": 9,
+};
+
 export default function EventModal({ isOpen, onClose, onSave, event }: EventModalProps) {
-  const [year, setYear] = useState(currentYear);
-  const [month, setMonth] = useState<number | undefined>(undefined);
+  const [year, setYear] = useState<string>("");
+  const [month, setMonth] = useState<string>("");
+  const [selectedPhase, setSelectedPhase] = useState("Neutral");
   const [score, setScore] = useState(0);
   const [description, setDescription] = useState("");
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (event) {
-      setYear(event.year);
-      setMonth(event.month);
+      setYear(event.year.toString());
+      setMonth(event.month?.toString() || "");
       setScore(event.score);
+      setSelectedPhase(event.phase);
       setDescription(event.description);
     } else {
-      // Reset for new event
-      setYear(currentYear);
-      setMonth(undefined);
+      setYear("");
+      setMonth("");
       setScore(0);
+      setSelectedPhase("Neutral");
       setDescription("");
     }
     setError("");
   }, [event, isOpen]);
 
+  const handlePhaseSelect = (phase: string) => {
+    setSelectedPhase(phase);
+    setScore(phaseToScore[phase]);
+  };
+
+  const handleScoreChange = (newScore: number) => {
+    setScore(newScore);
+    const phase = getPhaseFromScore(newScore);
+    setSelectedPhase(phase);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!year) {
+      setError("Please select a year");
+      return;
+    }
+
     if (!description.trim()) {
-      setError("Please enter a description");
+      setError("Please describe what happened");
       return;
     }
 
     const phase = getPhaseFromScore(score);
 
     onSave({
-      year,
-      month: month || undefined,
+      year: parseInt(year),
+      month: month ? parseInt(month) : undefined,
       phase: phase as any,
       score,
       description: description.trim(),
     });
 
     // Reset form
-    setYear(currentYear);
-    setMonth(undefined);
+    setYear("");
+    setMonth("");
     setScore(0);
+    setSelectedPhase("Neutral");
     setDescription("");
     setError("");
   };
@@ -90,44 +117,44 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
           />
 
           {/* Modal */}
-          <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="glass-card p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto"
+              initial={{ opacity: 0, y: "100%" }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 300 }}
+              className="bg-dark-bg w-full sm:max-w-2xl sm:rounded-3xl rounded-t-3xl max-h-[90vh] overflow-y-auto"
             >
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
+              <div className="sticky top-0 bg-dark-bg/95 backdrop-blur-lg border-b border-white/10 p-6 flex items-center justify-between">
                 <h2 className="text-2xl font-bold text-white">
-                  {event ? "Edit Event" : "Add Life Event"}
+                  {event ? "Edit" : "Add"} Life Event
                 </h2>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                  className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6 text-gray-400" />
                 </button>
               </div>
 
-              {/* Form */}
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 {/* Year & Month */}
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
+                    <label className="block text-sm font-medium text-gray-400 mb-3">
                       Year <span className="text-red-400">*</span>
                     </label>
                     <select
                       value={year}
-                      onChange={(e) => setYear(Number(e.target.value))}
+                      onChange={(e) => setYear(e.target.value)}
                       className="input-field"
                       required
                     >
+                      <option value="">Select year</option>
                       {years.map((y) => (
                         <option key={y} value={y}>
                           {y}
@@ -137,12 +164,12 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-white/80 mb-2">
-                      Month (Optional)
+                    <label className="block text-sm font-medium text-gray-400 mb-3">
+                      Month (optional)
                     </label>
                     <select
-                      value={month || ""}
-                      onChange={(e) => setMonth(e.target.value ? Number(e.target.value) : undefined)}
+                      value={month}
+                      onChange={(e) => setMonth(e.target.value)}
                       className="input-field"
                     >
                       <option value="">Select month</option>
@@ -155,59 +182,90 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                   </div>
                 </div>
 
+                {/* Phase Selection */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-3">
+                    How was this phase? <span className="text-red-400">*</span>
+                  </label>
+                  <div className="flex flex-wrap gap-2 sm:gap-3">
+                    {phases.map((phase) => (
+                      <button
+                        key={phase}
+                        type="button"
+                        onClick={() => handlePhaseSelect(phase)}
+                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all ${
+                          selectedPhase === phase
+                            ? "bg-white text-dark-bg border-2 border-white"
+                            : "bg-transparent text-gray-400 border-2 border-white/20 hover:border-white/40"
+                        }`}
+                      >
+                        {phase}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Score Slider */}
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2">
-                    Emotional Score: {score} ({getPhaseFromScore(score)})
-                  </label>
+                  <div className="flex items-center justify-between mb-4">
+                    <label className="text-sm font-medium text-gray-400">
+                      Rating
+                    </label>
+                    <span className="text-xl font-bold text-white">
+                      {score} : {selectedPhase}
+                    </span>
+                  </div>
                   <input
                     type="range"
                     min="-10"
                     max="10"
-                    step="0.5"
+                    step="1"
                     value={score}
-                    onChange={(e) => setScore(Number(e.target.value))}
-                    className="w-full h-2 bg-white/20 rounded-lg appearance-none cursor-pointer slider"
+                    onChange={(e) => handleScoreChange(Number(e.target.value))}
+                    className="w-full h-2 bg-dark-lighter rounded-full appearance-none cursor-pointer accent-purple-500"
+                    style={{
+                      background: `linear-gradient(to right, #ef4444 0%, #f97316 25%, #6b7280 50%, #3b82f6 75%, #10b981 100%)`
+                    }}
                   />
-                  <div className="flex justify-between text-xs text-white/40 mt-1">
-                    <span>-10 (Very Low)</span>
-                    <span>10 (Very High)</span>
+                  <div className="flex justify-between text-xs text-gray-500 mt-2">
+                    <span>-10</span>
+                    <span>0</span>
+                    <span>+10</span>
                   </div>
                 </div>
 
                 {/* Description */}
                 <div>
-                  <label className="block text-sm font-medium text-white/80 mb-2">
-                    Description <span className="text-red-400">*</span>
+                  <label className="block text-sm font-medium text-gray-400 mb-3">
+                    What happened? <span className="text-red-400">*</span>
                   </label>
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="input-field resize-none"
-                    rows={4}
-                    placeholder="Describe what happened and how you felt..."
+                    className="input-field resize-none min-h-[120px]"
+                    placeholder="Describe this phase of your life..."
                     required
                   />
                 </div>
 
                 {/* Error */}
                 {error && (
-                  <div className="bg-red-500/10 border border-red-500/50 rounded-lg p-3 text-red-400 text-sm">
+                  <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm">
                     {error}
                   </div>
                 )}
 
                 {/* Buttons */}
-                <div className="flex gap-3">
+                <div className="grid grid-cols-2 gap-3 pt-4">
                   <button
                     type="button"
                     onClick={onClose}
-                    className="btn-secondary flex-1"
+                    className="btn-secondary"
                   >
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary flex-1">
-                    {event ? "Update Event" : "Add Event"}
+                  <button type="submit" className="btn-primary">
+                    {event ? "Update" : "Add"} Event
                   </button>
                 </div>
               </form>
@@ -218,4 +276,3 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
     </AnimatePresence>
   );
 }
-

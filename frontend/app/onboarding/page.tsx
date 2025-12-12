@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
-import { User, Calendar } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Calendar, ArrowLeft } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { useUserStore } from "@/lib/store";
 
@@ -11,16 +11,27 @@ export default function Onboarding() {
   const router = useRouter();
   const setUser = useUserStore((state) => state.setUser);
   
-  const [name, setName] = useState("");
+  const [step, setStep] = useState(1); // 1 = DOB, 2 = Name
   const [dob, setDob] = useState("");
+  const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleDobSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!dob) {
+      setError("Please enter your date of birth");
+      return;
+    }
+    setError("");
+    setStep(2);
+  };
+
+  const handleNameSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name || !dob) {
-      setError("Please fill in all fields");
+    if (!name) {
+      setError("Please enter your name");
       return;
     }
 
@@ -39,176 +50,183 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
-      {/* Animated background */}
-      <div className="absolute inset-0">
-        <div className="absolute top-1/3 left-1/4 w-96 h-96 bg-primary-500/20 rounded-full blur-3xl animate-pulse-slow" />
-        <div className="absolute bottom-1/3 right-1/4 w-96 h-96 bg-accent-violet/20 rounded-full blur-3xl animate-pulse-slow" style={{ animationDelay: "1s" }} />
-      </div>
-
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, type: "spring" }}
-        className="w-full max-w-md relative z-10"
-      >
-        <motion.div 
-          className="glass-card p-8 md:p-10"
-          whileHover={{ scale: 1.02 }}
-          transition={{ duration: 0.2 }}
-        >
-          {/* Header */}
-          <div className="text-center mb-10">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-dark-bg">
+      <div className="w-full max-w-md">
+        <AnimatePresence mode="wait">
+          {step === 1 ? (
             <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1, rotate: 360 }}
-              transition={{ duration: 0.6, type: "spring" }}
-              className="w-20 h-20 mx-auto mb-6 bg-gradient-to-br from-primary-500/20 to-accent-violet/20 rounded-full flex items-center justify-center"
+              key="step1"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              transition={{ duration: 0.3 }}
+              className="text-center"
             >
-              <User className="w-10 h-10 text-primary-400" />
-            </motion.div>
-            <motion.h1 
-              className="text-4xl font-bold mb-3 bg-gradient-to-r from-primary-400 via-accent-violet to-accent-coral bg-clip-text text-transparent"
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.2 }}
-            >
-              Welcome to LifeLens
-            </motion.h1>
-            <motion.p 
-              className="text-white/70 text-lg"
-              initial={{ y: -10, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-            >
-              Let's start by getting to know you
-            </motion.p>
-            <motion.div
-              className="mt-4 h-1 bg-gradient-to-r from-transparent via-primary-400 to-transparent"
-              initial={{ scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ delay: 0.4, duration: 0.6 }}
-            />
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-7">
-            {/* Name Field */}
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              <label htmlFor="name" className="block text-sm font-semibold text-white/90 mb-3">
-                Your Name <span className="text-red-400">*</span>
-              </label>
-              <div className="relative group">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40 group-focus-within:text-primary-400 transition-colors" />
-                <input
-                  type="text"
-                  id="name"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full bg-white/10 border-2 border-white/20 rounded-xl px-12 py-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-400 focus:bg-white/15 transition-all duration-300"
-                  placeholder="e.g., Sarah Johnson"
-                  required
-                />
-                <motion.div
-                  className="absolute inset-0 rounded-xl border-2 border-primary-400/0 group-focus-within:border-primary-400/50 transition-all pointer-events-none"
-                  whileFocus={{ scale: 1.02 }}
-                />
-              </div>
-            </motion.div>
-
-            {/* Date of Birth Field */}
-            <motion.div
-              initial={{ x: -20, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              transition={{ delay: 0.6 }}
-            >
-              <label htmlFor="dob" className="block text-sm font-semibold text-white/90 mb-3">
-                Date of Birth <span className="text-red-400">*</span>
-              </label>
-              <div className="relative group">
-                <Calendar className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-white/40 group-focus-within:text-primary-400 transition-colors" />
-                <input
-                  type="date"
-                  id="dob"
-                  value={dob}
-                  onChange={(e) => setDob(e.target.value)}
-                  className="w-full bg-white/10 border-2 border-white/20 rounded-xl px-12 py-4 text-white placeholder-white/40 focus:outline-none focus:border-primary-400 focus:bg-white/15 transition-all duration-300"
-                  required
-                  max={new Date().toISOString().split("T")[0]}
-                />
-                <motion.div
-                  className="absolute inset-0 rounded-xl border-2 border-primary-400/0 group-focus-within:border-primary-400/50 transition-all pointer-events-none"
-                  whileFocus={{ scale: 1.02 }}
-                />
-              </div>
-            </motion.div>
-
-            {/* Error Message */}
-            {error && (
+              {/* Icon */}
               <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/20 border-2 border-red-500/50 rounded-xl p-4 text-red-300 text-sm flex items-start gap-3"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
+                className="icon-bg mx-auto mb-8 w-24 h-24"
               >
-                <span className="text-xl">⚠️</span>
-                <span>{error}</span>
+                <Calendar className="w-12 h-12 text-purple-400" />
               </motion.div>
-            )}
 
-            {/* Submit Button */}
-            <motion.button
-              type="submit"
-              disabled={loading}
-              className="relative w-full group overflow-hidden"
-              whileHover={{ scale: loading ? 1 : 1.02 }}
-              whileTap={{ scale: loading ? 1 : 0.98 }}
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.7 }}
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-accent-violet to-primary-600 opacity-90 group-hover:opacity-100 transition-opacity" />
-              <div className="absolute inset-0 bg-gradient-to-r from-primary-600 via-accent-violet to-primary-600 blur-xl opacity-50 group-hover:opacity-75 transition-opacity" />
-              {loading ? (
-                <span className="relative flex items-center justify-center py-4 text-white font-bold text-lg">
-                  <svg className="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Creating your profile...
-                </span>
-              ) : (
-                <span className="relative flex items-center justify-center py-4 text-white font-bold text-lg gap-2">
-                  Continue
-                  <motion.span
-                    animate={{ x: [0, 5, 0] }}
-                    transition={{ duration: 1, repeat: Infinity }}
+              {/* Title */}
+              <motion.h1
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-4xl md:text-5xl font-bold mb-3"
+              >
+                <span className="text-purple-400">Life</span>
+                <span className="text-orange-400">Lens</span>
+                <span className="text-white"> AI</span>
+              </motion.h1>
+
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.3 }}
+                className="text-gray-400 text-lg mb-12"
+              >
+                Let's start with when your journey began
+              </motion.p>
+
+              {/* Form */}
+              <form onSubmit={handleDobSubmit} className="space-y-6">
+                <div className="text-left">
+                  <label className="block text-sm font-medium text-gray-400 mb-3">
+                    Date of Birth
+                  </label>
+                  <input
+                    type="date"
+                    value={dob}
+                    onChange={(e) => setDob(e.target.value)}
+                    className="input-field text-center text-lg"
+                    max={new Date().toISOString().split("T")[0]}
+                    required
+                  />
+                </div>
+
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm"
                   >
-                    →
-                  </motion.span>
-                </span>
-              )}
-            </motion.button>
-          </form>
+                    {error}
+                  </motion.div>
+                )}
 
-          {/* Privacy Note */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.8 }}
-            className="mt-8 text-center"
-          >
-            <div className="flex items-center justify-center gap-2 text-white/50 text-xs">
-              <span className="text-lg">🔒</span>
-              <span>Your information is encrypted and private</span>
-            </div>
-          </motion.div>
-        </motion.div>
-      </motion.div>
+                <button type="submit" className="btn-primary text-lg">
+                  Continue
+                </button>
+              </form>
+
+              <p className="mt-8 text-gray-500 text-sm">
+                Your data is secure and private
+              </p>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="step2"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              {/* Back Button */}
+              <button
+                onClick={() => setStep(1)}
+                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
+              >
+                <ArrowLeft className="w-5 h-5" />
+                Back
+              </button>
+
+              <div className="text-center">
+                {/* Icon */}
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ type: "spring", stiffness: 200 }}
+                  className="icon-bg mx-auto mb-8 w-24 h-24"
+                >
+                  <User className="w-12 h-12 text-purple-400" />
+                </motion.div>
+
+                {/* Title */}
+                <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">
+                  What should we call you?
+                </h1>
+
+                <p className="text-gray-400 mb-12">
+                  This will personalize your experience
+                </p>
+
+                {/* Form */}
+                <form onSubmit={handleNameSubmit} className="space-y-6">
+                  <div className="text-left">
+                    <label className="block text-sm font-medium text-gray-400 mb-3">
+                      Your Name
+                    </label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="input-field text-lg"
+                      placeholder="Enter your name"
+                      required
+                      autoFocus
+                    />
+                  </div>
+
+                  {error && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm"
+                    >
+                      {error}
+                    </motion.div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="btn-primary text-lg flex items-center justify-center gap-2"
+                  >
+                    {loading ? (
+                      <>
+                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                          <circle
+                            className="opacity-25"
+                            cx="12"
+                            cy="12"
+                            r="10"
+                            stroke="currentColor"
+                            strokeWidth="4"
+                            fill="none"
+                          />
+                          <path
+                            className="opacity-75"
+                            fill="currentColor"
+                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                          />
+                        </svg>
+                        Creating your profile...
+                      </>
+                    ) : (
+                      "Start Your Journey"
+                    )}
+                  </button>
+                </form>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
-
