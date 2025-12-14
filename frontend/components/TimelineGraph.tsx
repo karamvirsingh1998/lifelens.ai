@@ -8,9 +8,8 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ResponsiveContainer,
-  ReferenceDot,
+  Legend,
 } from "recharts";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
@@ -44,43 +43,31 @@ export default function TimelineGraph({
 }: TimelineGraphProps) {
   const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
 
-  // Combine all data points
+  // Prepare chart data
   const historicalData = timeline.map((event) => ({
     year: event.year,
     historical: event.score,
     event: event,
   }));
 
-  const statData = statisticalForecast.map((point) => ({
-    year: point.year,
-    statistical: point.score,
-  }));
-
-  const llmData = llmForecast.map((point) => ({
-    year: point.year,
-    llm: point.score,
-    reasoning: point.reasoning,
-  }));
-
-  // Merge all data
   const allYears = [
     ...new Set([
-      ...historicalData.map((d) => d.year),
-      ...statData.map((d) => d.year),
-      ...llmData.map((d) => d.year),
+      ...timeline.map((e) => e.year),
+      ...statisticalForecast.map((f) => f.year),
+      ...llmForecast.map((f) => f.year),
     ]),
   ].sort((a, b) => a - b);
 
   const chartData = allYears.map((year) => {
     const hist = historicalData.find((d) => d.year === year);
-    const stat = statData.find((d) => d.year === year);
-    const llm = llmData.find((d) => d.year === year);
+    const stat = statisticalForecast.find((f) => f.year === year);
+    const llm = llmForecast.find((f) => f.year === year);
 
     return {
       year,
       historical: hist?.historical,
-      statistical: stat?.statistical,
-      llm: llm?.llm,
+      statistical: stat?.score,
+      llm: llm?.score,
       event: hist?.event,
       reasoning: llm?.reasoning,
     };
@@ -88,27 +75,22 @@ export default function TimelineGraph({
 
   const CustomTooltip = ({ active, payload }: any) => {
     if (!active || !payload || !payload.length) return null;
-
     const data = payload[0].payload;
 
     return (
-      <div className="glass-card p-4 max-w-xs">
+      <div className="card p-4 max-w-xs">
         <p className="font-bold text-white mb-2">Year {data.year}</p>
         {data.historical !== undefined && (
-          <div className="mb-2">
-            <p className="text-sm text-green-400">Historical: {data.historical.toFixed(1)}</p>
-          </div>
+          <p className="text-sm text-green-400 mb-1">Historical: {data.historical.toFixed(1)}</p>
         )}
         {data.statistical !== undefined && (
-          <div className="mb-2">
-            <p className="text-sm text-blue-400">Statistical: {data.statistical.toFixed(1)}</p>
-          </div>
+          <p className="text-sm text-blue-400 mb-1">Statistical: {data.statistical.toFixed(1)}</p>
         )}
         {data.llm !== undefined && (
-          <div className="mb-2">
-            <p className="text-sm text-purple-400">LLM Intuition: {data.llm.toFixed(1)}</p>
+          <div>
+            <p className="text-sm text-purple-400 mb-1">LLM: {data.llm.toFixed(1)}</p>
             {data.reasoning && (
-              <p className="text-xs text-white/60 mt-1">{data.reasoning}</p>
+              <p className="text-xs text-gray-400 mt-2">{data.reasoning}</p>
             )}
           </div>
         )}
@@ -117,41 +99,45 @@ export default function TimelineGraph({
   };
 
   return (
-    <div className="glass-card p-6">
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-white mb-2">Your Emotional Timeline</h2>
-        <div className="flex flex-wrap gap-4 text-sm">
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-1 bg-green-400" />
-            <span className="text-white/70">Historical</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-1 bg-blue-400 border-t-2 border-dashed" />
-            <span className="text-white/70">Statistical Prediction</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="w-4 h-1 bg-purple-400 border-t-2 border-dashed" />
-            <span className="text-white/70">LLM Intuition</span>
-          </div>
+    <div className="card p-6">
+      <h2 className="text-2xl font-bold text-white mb-2">Your Emotional Timeline</h2>
+      <p className="text-gray-400 text-sm mb-6">Click on any point to see details</p>
+
+      {/* Legend */}
+      <div className="flex flex-wrap gap-4 mb-6 text-sm">
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-green-400" />
+          <span className="text-gray-400">Historical</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-blue-400 border-t-2 border-dashed" />
+          <span className="text-gray-400">Statistical Prediction</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-purple-400 border-t-2 border-dashed" />
+          <span className="text-gray-400">LLM Intuition</span>
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={400}>
-        <LineChart data={chartData} margin={{ top: 20, right: 30, left: 0, bottom: 20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+      {/* Chart */}
+      <ResponsiveContainer width="100%" height={350}>
+        <LineChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 10 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
           <XAxis
             dataKey="year"
-            stroke="rgba(255,255,255,0.5)"
+            stroke="rgba(255,255,255,0.3)"
             style={{ fontSize: "12px" }}
+            tickLine={false}
           />
           <YAxis
             domain={[-10, 10]}
-            stroke="rgba(255,255,255,0.5)"
+            stroke="rgba(255,255,255,0.3)"
             style={{ fontSize: "12px" }}
+            tickLine={false}
           />
           <Tooltip content={<CustomTooltip />} />
 
-          {/* Historical Line (Solid) */}
+          {/* Historical Line */}
           <Line
             type="monotone"
             dataKey="historical"
@@ -161,33 +147,35 @@ export default function TimelineGraph({
               fill: "#10b981",
               r: 6,
               cursor: "pointer",
-              onClick: (_, index) => {
-                const event = chartData[index].event;
-                if (event) setSelectedEvent(event);
+              onClick: (data: any) => {
+                if (data.payload.event) {
+                  setSelectedEvent(data.payload.event);
+                }
               },
             }}
+            activeDot={{ r: 8 }}
             connectNulls={false}
           />
 
-          {/* Statistical Forecast (Dotted Blue) */}
+          {/* Statistical Forecast */}
           <Line
             type="monotone"
             dataKey="statistical"
             stroke="#3b82f6"
             strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={{ fill: "#3b82f6", r: 4 }}
+            strokeDasharray="6 6"
+            dot={{ fill: "#3b82f6", r: 5 }}
             connectNulls={false}
           />
 
-          {/* LLM Forecast (Dotted Purple) */}
+          {/* LLM Forecast */}
           <Line
             type="monotone"
             dataKey="llm"
             stroke="#a78bfa"
             strokeWidth={2}
-            strokeDasharray="5 5"
-            dot={{ fill: "#a78bfa", r: 4 }}
+            strokeDasharray="6 6"
+            dot={{ fill: "#a78bfa", r: 5 }}
             connectNulls={false}
           />
         </LineChart>
@@ -202,59 +190,54 @@ export default function TimelineGraph({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedEvent(null)}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              className="fixed inset-0 bg-black/70 z-50"
             />
             <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
               <motion.div
-                initial={{ opacity: 0, scale: 0.95 }}
+                initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="glass-card p-6 max-w-md w-full"
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="card p-6 max-w-md w-full"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h3 className="text-2xl font-bold text-primary-400">
-                      {selectedEvent.year}
-                    </h3>
+                    <h3 className="text-2xl font-bold text-purple-400">{selectedEvent.year}</h3>
                     {selectedEvent.month && (
-                      <p className="text-white/60">
-                        {new Date(2000, selectedEvent.month - 1).toLocaleString("default", {
-                          month: "long",
-                        })}
+                      <p className="text-gray-400">
+                        {new Date(2000, selectedEvent.month - 1).toLocaleString("default", { month: "long" })}
                       </p>
                     )}
                   </div>
                   <button
                     onClick={() => setSelectedEvent(null)}
-                    className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                    className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-5 h-5 text-gray-400" />
                   </button>
                 </div>
 
-                <div className="mb-4">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span
-                      className="px-3 py-1 rounded-full text-xs font-semibold"
-                      style={{
-                        backgroundColor: getPhaseColor(selectedEvent.phase) + "20",
-                        color: getPhaseColor(selectedEvent.phase),
-                      }}
-                    >
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className={`phase-badge ${
+                      selectedEvent.phase === "Very High" ? "very-high" :
+                      selectedEvent.phase === "High" ? "high" :
+                      selectedEvent.phase === "Moderate" ? "moderate" :
+                      selectedEvent.phase === "Low" ? "low" : "very-low"
+                    }`}>
                       {selectedEvent.phase}
                     </span>
-                    <span className="text-white/60">Score: {selectedEvent.score}</span>
+                    <span className="text-gray-400">Score: {selectedEvent.score}</span>
                   </div>
 
                   {selectedEvent.rephrased && (
-                    <div className="bg-white/5 rounded-lg p-4 mb-3">
-                      <p className="text-white/90 italic">{selectedEvent.rephrased}</p>
+                    <div className="bg-white/5 rounded-2xl p-4">
+                      <p className="text-white italic text-sm">{selectedEvent.rephrased}</p>
                     </div>
                   )}
 
-                  <div className="bg-white/5 rounded-lg p-4">
-                    <p className="text-sm text-white/60 mb-1">Original:</p>
-                    <p className="text-white/80">{selectedEvent.event}</p>
+                  <div>
+                    <p className="text-xs text-gray-500 mb-2">Original:</p>
+                    <p className="text-gray-300 text-sm">{selectedEvent.event}</p>
                   </div>
                 </div>
               </motion.div>
@@ -265,15 +248,3 @@ export default function TimelineGraph({
     </div>
   );
 }
-
-function getPhaseColor(phase: string): string {
-  const colors: Record<string, string> = {
-    "Very High": "#10b981",
-    "High": "#3b82f6",
-    "Moderate": "#f59e0b",
-    "Low": "#ef4444",
-    "Very Low": "#991b1b",
-  };
-  return colors[phase] || colors["Moderate"];
-}
-

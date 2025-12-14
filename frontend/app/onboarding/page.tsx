@@ -1,231 +1,343 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { User, Calendar, ArrowLeft } from "lucide-react";
-import { apiClient } from "@/lib/api";
-import { useUserStore } from "@/lib/store";
+import { Calendar, User, ArrowLeft } from "lucide-react";
 
-export default function Onboarding() {
-  const router = useRouter();
-  const setUser = useUserStore((state) => state.setUser);
-  
-  const [step, setStep] = useState(1); // 1 = DOB, 2 = Name
-  const [dob, setDob] = useState("");
+export default function OnboardingPage() {
+  const [step, setStep] = useState(1);
+  const [dateOfBirth, setDateOfBirth] = useState("");
   const [name, setName] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
-  const handleDobSubmit = (e: React.FormEvent) => {
+  const handleStep1Submit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!dob) {
-      setError("Please enter your date of birth");
-      return;
-    }
-    setError("");
+    console.log("Date of Birth:", dateOfBirth);
     setStep(2);
   };
 
-  const handleNameSubmit = async (e: React.FormEvent) => {
+  const handleStep2Submit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log("Name:", name);
+    console.log("Complete data:", { dateOfBirth, name });
     
-    if (!name) {
-      setError("Please enter your name");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
     try {
-      const response = await apiClient.onboarding({ name, dob });
-      setUser(response.user_id, name, dob);
-      router.push("/events");
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Something went wrong. Please try again.");
-    } finally {
-      setLoading(false);
+      // Store user data in backend
+      const response = await fetch('http://localhost:8000/api/onboarding', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ name, dob: dateOfBirth }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to create user profile');
+      }
+      
+      const data = await response.json();
+      
+      // Store user ID and name in localStorage
+      localStorage.setItem("userId", data.user_id);
+      localStorage.setItem("userName", name);
+      
+      // Navigate to events page
+      window.location.href = "/events";
+    } catch (error) {
+      console.error("Failed to create profile:", error);
+      // Continue anyway with local storage
+      localStorage.setItem("userId", Date.now().toString());
+      localStorage.setItem("userName", name);
+      window.location.href = "/events";
     }
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-dark-bg">
-      <div className="w-full max-w-md">
-        <AnimatePresence mode="wait">
-          {step === 1 ? (
-            <motion.div
-              key="step1"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              transition={{ duration: 0.3 }}
-              className="text-center"
-            >
-              {/* Icon */}
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ delay: 0.1, type: "spring", stiffness: 200 }}
-                className="icon-bg mx-auto mb-8 w-24 h-24"
-              >
-                <Calendar className="w-12 h-12 text-purple-400" />
-              </motion.div>
+    <div 
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        background: 'linear-gradient(to bottom right, #2d2347, #1e1a2e, #1a1625)',
+        padding: '20px',
+        position: 'relative'
+      }}
+    >
+      {/* Back Button - Only show on step 2 */}
+      {step === 2 && (
+        <button
+          onClick={() => setStep(1)}
+          style={{
+            position: 'absolute',
+            top: '40px',
+            left: '40px',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'transparent',
+            border: 'none',
+            color: '#9ca3af',
+            fontSize: '16px',
+            cursor: 'pointer',
+            transition: 'color 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+          onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+        >
+          <ArrowLeft style={{ width: '20px', height: '20px' }} />
+          Back
+        </button>
+      )}
 
-              {/* Title */}
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-                className="text-4xl md:text-5xl font-bold mb-3"
-              >
-                <span className="text-purple-400">Life</span>
-                <span className="text-orange-400">Lens</span>
-                <span className="text-white"> AI</span>
-              </motion.h1>
-
-              <motion.p
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-                className="text-gray-400 text-lg mb-12"
-              >
-                Let's start with when your journey began
-              </motion.p>
-
-              {/* Form */}
-              <form onSubmit={handleDobSubmit} className="space-y-6">
-                <div className="text-left">
-                  <label className="block text-sm font-medium text-gray-400 mb-3">
-                    Date of Birth
-                  </label>
-                  <input
-                    type="date"
-                    value={dob}
-                    onChange={(e) => setDob(e.target.value)}
-                    className="input-field text-center text-lg"
-                    max={new Date().toISOString().split("T")[0]}
-                    required
-                  />
+      <div style={{ width: '100%', maxWidth: '440px' }}>
+        {step === 1 ? (
+          // STEP 1: Date of Birth
+          <>
+            {/* Icon with glow effect */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+              <div style={{ position: 'relative' }}>
+                {/* Glow effect */}
+                <div 
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(139, 92, 246, 0.2)',
+                    filter: 'blur(40px)',
+                    borderRadius: '50%'
+                  }}
+                ></div>
+                {/* Icon container */}
+                <div 
+                  style={{
+                    position: 'relative',
+                    background: '#2d2640',
+                    borderRadius: '20px',
+                    width: '72px',
+                    height: '72px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
+                >
+                  <Calendar style={{ width: '32px', height: '32px', color: '#a78bfa' }} />
                 </div>
+              </div>
+            </div>
 
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-
-                <button type="submit" className="btn-primary text-lg">
-                  Continue
-                </button>
-              </form>
-
-              <p className="mt-8 text-gray-500 text-sm">
-                Your data is secure and private
-              </p>
-            </motion.div>
-          ) : (
-            <motion.div
-              key="step2"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.3 }}
+            {/* Title */}
+            <h1 
+              style={{
+                fontSize: '40px',
+                lineHeight: '1.2',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                marginBottom: '12px'
+              }}
             >
-              {/* Back Button */}
-              <button
-                onClick={() => setStep(1)}
-                className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-8"
+              <span 
+                style={{
+                  background: 'linear-gradient(to right, #a78bfa, #ec4899)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text'
+                }}
               >
-                <ArrowLeft className="w-5 h-5" />
-                Back
+                LifeLens
+              </span>
+              <span style={{ color: 'white' }}> AI</span>
+            </h1>
+
+            {/* Subtitle */}
+            <p 
+              style={{
+                color: '#9ca3af',
+                fontSize: '16px',
+                textAlign: 'center',
+                marginBottom: '40px'
+              }}
+            >
+              Let's start with when your journey began
+            </p>
+
+            {/* Form */}
+            <form onSubmit={handleStep1Submit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Date of Birth Field */}
+              <div>
+                <label 
+                  style={{
+                    display: 'block',
+                    color: '#9ca3af',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px'
+                  }}
+                >
+                  Date of Birth
+                </label>
+                <input
+                  type="date"
+                  value={dateOfBirth}
+                  onChange={(e) => setDateOfBirth(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#1e1a2e',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    color: 'white',
+                    fontSize: '16px',
+                    outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Continue Button */}
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Continue
               </button>
 
-              <div className="text-center">
-                {/* Icon */}
-                <motion.div
-                  initial={{ scale: 0 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: "spring", stiffness: 200 }}
-                  className="icon-bg mx-auto mb-8 w-24 h-24"
+              {/* Privacy Note */}
+              <p 
+                style={{
+                  textAlign: 'center',
+                  color: '#6b7280',
+                  fontSize: '14px'
+                }}
+              >
+                Your data is secure and private
+              </p>
+            </form>
+          </>
+        ) : (
+          // STEP 2: Name Input
+          <>
+            {/* Icon with glow effect */}
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '32px' }}>
+              <div style={{ position: 'relative' }}>
+                {/* Glow effect */}
+                <div 
+                  style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'rgba(139, 92, 246, 0.2)',
+                    filter: 'blur(40px)',
+                    borderRadius: '50%'
+                  }}
+                ></div>
+                {/* Icon container */}
+                <div 
+                  style={{
+                    position: 'relative',
+                    background: '#2d2640',
+                    borderRadius: '20px',
+                    width: '72px',
+                    height: '72px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}
                 >
-                  <User className="w-12 h-12 text-purple-400" />
-                </motion.div>
-
-                {/* Title */}
-                <h1 className="text-3xl md:text-4xl font-bold mb-3 text-white">
-                  What should we call you?
-                </h1>
-
-                <p className="text-gray-400 mb-12">
-                  This will personalize your experience
-                </p>
-
-                {/* Form */}
-                <form onSubmit={handleNameSubmit} className="space-y-6">
-                  <div className="text-left">
-                    <label className="block text-sm font-medium text-gray-400 mb-3">
-                      Your Name
-                    </label>
-                    <input
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      className="input-field text-lg"
-                      placeholder="Enter your name"
-                      required
-                      autoFocus
-                    />
-                  </div>
-
-                  {error && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm"
-                    >
-                      {error}
-                    </motion.div>
-                  )}
-
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="btn-primary text-lg flex items-center justify-center gap-2"
-                  >
-                    {loading ? (
-                      <>
-                        <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                          <circle
-                            className="opacity-25"
-                            cx="12"
-                            cy="12"
-                            r="10"
-                            stroke="currentColor"
-                            strokeWidth="4"
-                            fill="none"
-                          />
-                          <path
-                            className="opacity-75"
-                            fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                          />
-                        </svg>
-                        Creating your profile...
-                      </>
-                    ) : (
-                      "Start Your Journey"
-                    )}
-                  </button>
-                </form>
+                  <User style={{ width: '32px', height: '32px', color: '#a78bfa' }} />
+                </div>
               </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            </div>
+
+            {/* Title */}
+            <h1 
+              style={{
+                fontSize: '40px',
+                lineHeight: '1.2',
+                fontWeight: 'bold',
+                textAlign: 'center',
+                marginBottom: '12px',
+                color: 'white'
+              }}
+            >
+              What should we call you?
+            </h1>
+
+            {/* Subtitle */}
+            <p 
+              style={{
+                color: '#9ca3af',
+                fontSize: '16px',
+                textAlign: 'center',
+                marginBottom: '40px'
+              }}
+            >
+              This will personalize your experience
+            </p>
+
+            {/* Form */}
+            <form onSubmit={handleStep2Submit} style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Name Field */}
+              <div>
+                <label 
+                  style={{
+                    display: 'block',
+                    color: '#9ca3af',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px'
+                  }}
+                >
+                  Your Name
+                </label>
+                <input
+                  type="text"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Enter your name"
+                  style={{
+                    width: '100%',
+                    background: '#1e1a2e',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    padding: '16px 20px',
+                    color: 'white',
+                    fontSize: '16px',
+                    outline: 'none'
+                  }}
+                  required
+                />
+              </div>
+
+              {/* Start Journey Button */}
+              <button
+                type="submit"
+                style={{
+                  width: '100%',
+                  background: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  padding: '16px',
+                  borderRadius: '16px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s'
+                }}
+              >
+                Start Your Journey
+              </button>
+            </form>
+          </>
+        )}
       </div>
     </div>
   );

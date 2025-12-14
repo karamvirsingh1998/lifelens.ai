@@ -1,234 +1,518 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { ArrowLeft, Plus, X, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
-import { Plus, ArrowLeft, Sparkles } from "lucide-react";
-import { useUserStore, useEventsStore } from "@/lib/store";
-import { apiClient, LifeEvent } from "@/lib/api";
-import EventModal from "@/components/EventModal";
+import { storeLifeEvents } from "../../lib/api";
 
-export default function Events() {
+type LifeEvent = {
+  id: string;
+  year: string;
+  month?: string;
+  phase: string;
+  rating: number;
+  description: string;
+};
+
+export default function EventsPage() {
   const router = useRouter();
-  const userId = useUserStore((state) => state.userId);
-  const userName = useUserStore((state) => state.userName);
-  
-  const events = useEventsStore((state) => state.events);
-  const setEvents = useEventsStore((state) => state.setEvents);
-  const addEvent = useEventsStore((state) => state.addEvent);
-  const removeEvent = useEventsStore((state) => state.removeEvent);
-  const updateEvent = useEventsStore((state) => state.updateEvent);
+  const [userName, setUserName] = useState("User");
+  const [userId, setUserId] = useState("");
+  const [showModal, setShowModal] = useState(false);
+  const [events, setEvents] = useState<LifeEvent[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
+  // Load from localStorage only on client-side
   useEffect(() => {
-    if (!userId) {
-      router.push("/onboarding");
+    if (typeof window !== 'undefined') {
+      setUserName(localStorage.getItem("userName") || "User");
+      setUserId(localStorage.getItem("userId") || "");
     }
-  }, [userId, router]);
+  }, []);
+  
+  // Form state
+  const [year, setYear] = useState("");
+  const [month, setMonth] = useState("");
+  const [phase, setPhase] = useState("Moderate");
+  const [rating, setRating] = useState(0);
+  const [description, setDescription] = useState("");
+
+  const phases = ["Very Low", "Low", "Moderate", "High", "Very High"];
+  const years = Array.from({ length: 100 }, (_, i) => (new Date().getFullYear() - i).toString());
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   const handleAddEvent = () => {
-    setEditingIndex(null);
-    setIsModalOpen(true);
+    if (!year || !description) return;
+    
+    const newEvent: LifeEvent = {
+      id: Date.now().toString(),
+      year,
+      month,
+      phase,
+      rating,
+      description
+    };
+    
+    setEvents([...events, newEvent]);
+    
+    // Reset form
+    setYear("");
+    setMonth("");
+    setPhase("Moderate");
+    setRating(0);
+    setDescription("");
+    setShowModal(false);
   };
 
-  const handleEditEvent = (index: number) => {
-    setEditingIndex(index);
-    setIsModalOpen(true);
+  const getRatingColor = (rating: number) => {
+    if (rating < -5) return "#ef4444"; // red
+    if (rating < 0) return "#f97316"; // orange
+    if (rating === 0) return "#6b7280"; // gray
+    if (rating <= 5) return "#3b82f6"; // blue
+    return "#10b981"; // green
   };
-
-  const handleSaveEvent = (event: LifeEvent) => {
-    if (editingIndex !== null) {
-      updateEvent(editingIndex, event);
-    } else {
-      addEvent(event);
-    }
-    setIsModalOpen(false);
-  };
-
-  const handleDeleteEvent = (index: number) => {
-    removeEvent(index);
-  };
-
-  const handleSubmit = async () => {
-    if (events.length === 0) {
-      setError("Please add at least one life event");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-
-    try {
-      await apiClient.saveEvents(userId!, events);
-      router.push("/analyzing");
-    } catch (err: any) {
-      setError(err.response?.data?.detail || "Failed to save events. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sortedEvents = [...events].sort((a, b) => {
-    if (a.year !== b.year) return b.year - a.year;
-    return (b.month || 0) - (a.month || 0);
-  });
 
   return (
-    <div className="min-h-screen bg-dark-bg p-4 sm:p-6 md:p-8 pb-24">
-      {/* Container for mobile/tablet/desktop */}
-      <div className="max-w-4xl mx-auto">
-        {/* Back Button */}
-        <button
-          onClick={() => router.push("/onboarding")}
-          className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors mb-6 sm:mb-8"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm sm:text-base">Back</span>
-        </button>
+    <div
+      style={{
+        minHeight: '100vh',
+        width: '100%',
+        background: 'linear-gradient(to bottom right, #2d2347, #1e1a2e, #1a1625)',
+        padding: '40px 20px'
+      }}
+    >
+      {/* Back Button */}
+      <button
+        onClick={() => router.push("/onboarding")}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          background: 'transparent',
+          border: 'none',
+          color: '#9ca3af',
+          fontSize: '16px',
+          cursor: 'pointer',
+          marginBottom: '40px',
+          transition: 'color 0.2s'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.color = 'white'}
+        onMouseLeave={(e) => e.currentTarget.style.color = '#9ca3af'}
+      >
+        <ArrowLeft style={{ width: '20px', height: '20px' }} />
+        Back
+      </button>
 
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-3 sm:mb-4">
-            Hey <span className="text-orange-400">{userName}</span>, tell us your story
-          </h1>
-          <p className="text-gray-400 text-sm sm:text-base md:text-lg">
-            Add the ups and downs of your life journey. The more detail, the better your insights.
-          </p>
-        </div>
+        <h1 style={{ fontSize: '48px', fontWeight: 'bold', marginBottom: '16px', color: 'white' }}>
+          Hey <span style={{ color: '#a78bfa' }}>{userName}</span>, tell us your story
+        </h1>
+        <p style={{ fontSize: '18px', color: '#9ca3af', marginBottom: '40px' }}>
+          Add the ups and downs of your life journey. The more detail, the better your insights.
+        </p>
 
-        {/* Events List or Empty State */}
-        {sortedEvents.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-card text-center py-16 sm:py-20 mb-6"
+        {/* Events Display */}
+        {events.length === 0 ? (
+          // Empty State
+          <div
+            style={{
+              background: 'rgba(30, 26, 46, 0.5)',
+              border: '1px solid rgba(255, 255, 255, 0.1)',
+              borderRadius: '24px',
+              padding: '80px 40px',
+              textAlign: 'center',
+              marginBottom: '32px'
+            }}
           >
-            <div className="icon-bg mx-auto mb-6 w-16 h-16 sm:w-20 sm:h-20">
-              <Plus className="w-8 h-8 sm:w-10 sm:h-10 text-gray-400" />
+            <div
+              style={{
+                width: '80px',
+                height: '80px',
+                background: '#2d2640',
+                borderRadius: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 24px'
+              }}
+            >
+              <Plus style={{ width: '40px', height: '40px', color: '#6b7280' }} />
             </div>
-            <h3 className="text-xl sm:text-2xl font-semibold text-white mb-3">
+            <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '12px' }}>
               No events yet
-            </h3>
-            <p className="text-gray-400 text-sm sm:text-base mb-8 max-w-sm mx-auto">
+            </h2>
+            <p style={{ fontSize: '16px', color: '#9ca3af', marginBottom: '32px' }}>
               Start adding significant moments from your life
             </p>
             <button
-              onClick={handleAddEvent}
-              className="btn-primary max-w-xs mx-auto text-sm sm:text-base"
+              onClick={() => setShowModal(true)}
+              style={{
+                background: 'linear-gradient(to right, #8b5cf6, #7c3aed)',
+                color: 'white',
+                fontWeight: '600',
+                fontSize: '16px',
+                padding: '14px 32px',
+                borderRadius: '12px',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
             >
-              <Plus className="w-5 h-5 inline mr-2" />
+              <Plus style={{ width: '20px', height: '20px' }} />
               Add Your First Event
             </button>
-          </motion.div>
+          </div>
         ) : (
-          <div className="space-y-4 mb-6">
-            <AnimatePresence>
-              {sortedEvents.map((event, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  className="event-card group cursor-pointer"
-                  onClick={() => handleEditEvent(index)}
+          // Events List
+          <>
+            <div style={{ marginBottom: '24px' }}>
+              {events.map((event) => (
+                <div
+                  key={event.id}
+                  style={{
+                    background: 'rgba(30, 26, 46, 0.5)',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '16px',
+                    padding: '24px',
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '16px'
+                  }}
                 >
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2 flex-wrap">
-                        <span className="text-lg sm:text-xl font-bold text-white">
-                          {event.year}
-                        </span>
-                        <span className={`px-3 py-1 rounded-full text-xs sm:text-sm font-medium ${
-                          event.phase === "Very High" ? "bg-green-500/20 text-green-400" :
-                          event.phase === "High" ? "bg-blue-500/20 text-blue-400" :
-                          event.phase === "Moderate" ? "bg-gray-500/20 text-gray-400" :
-                          event.phase === "Low" ? "bg-orange-500/20 text-orange-400" :
-                          "bg-red-500/20 text-red-400"
-                        }`}>
-                          {event.phase}
-                        </span>
-                        <span className="text-gray-500 text-xs sm:text-sm">
-                          {event.score > 0 ? "+" : ""}{event.score}
-                        </span>
-                      </div>
-                      <p className="text-gray-300 text-sm sm:text-base line-clamp-2">
-                        {event.description}
-                      </p>
+                  <div
+                    style={{
+                      width: '12px',
+                      height: '12px',
+                      borderRadius: '50%',
+                      background: getRatingColor(event.rating),
+                      marginTop: '6px',
+                      flexShrink: 0
+                    }}
+                  />
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: 'flex', gap: '16px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ color: 'white', fontWeight: '600', fontSize: '16px' }}>
+                        {event.month ? `${event.month.slice(0, 3)} ${event.year}` : event.year}
+                      </span>
+                      <span style={{ color: '#9ca3af', fontSize: '16px' }}>{event.phase}</span>
+                      <span style={{ color: '#9ca3af', fontSize: '16px' }}>{event.rating}</span>
                     </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleDeleteEvent(index);
-                      }}
-                      className="text-gray-500 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100 flex-shrink-0"
-                    >
-                      <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                      </svg>
-                    </button>
+                    <p style={{ color: '#d1d5db', fontSize: '15px' }}>{event.description}</p>
                   </div>
-                </motion.div>
+                </div>
               ))}
-            </AnimatePresence>
-          </div>
-        )}
+            </div>
 
-        {/* Fixed Bottom Actions */}
-        <div className="fixed bottom-0 left-0 right-0 bg-dark-bg/95 backdrop-blur-lg border-t border-white/10 p-4 sm:p-6">
-          <div className="max-w-4xl mx-auto grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <button
-              onClick={handleAddEvent}
-              className="btn-secondary flex items-center justify-center gap-2 text-sm sm:text-base"
-            >
-              <Plus className="w-5 h-5" />
-              Add Event
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={loading || events.length === 0}
-              className="btn-primary flex items-center justify-center gap-2 text-sm sm:text-base disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {loading ? (
-                <>
-                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                  Analyzing...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="w-5 h-5" />
-                  Analyze My Journey
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-
-        {/* Error Message */}
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="fixed top-4 left-4 right-4 sm:left-auto sm:right-4 sm:max-w-md bg-red-500/20 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm z-50"
-          >
-            {error}
-          </motion.div>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setShowModal(true)}
+                style={{
+                  background: '#2d2640',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flex: 1,
+                  justifyContent: 'center',
+                  minWidth: '200px'
+                }}
+              >
+                <Plus style={{ width: '20px', height: '20px' }} />
+                Add Event
+              </button>
+              <button
+                  onClick={async () => {
+                  setIsAnalyzing(true);
+                  try {
+                    // Convert events to API format
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+                    const apiEvents = events.map(e => ({
+                      year: parseInt(e.year),
+                      month: e.month ? monthNames.indexOf(e.month) + 1 : undefined,
+                      phase: e.phase,
+                      score: e.rating,
+                      description: e.description
+                    }));
+                    
+                    // Store events in backend
+                    await storeLifeEvents(userId, apiEvents);
+                    
+                    // Navigate to analyzing page
+                    router.push("/analyzing");
+                  } catch (error) {
+                    console.error("Failed to store events:", error);
+                    alert("Failed to store events. Please try again.");
+                  } finally {
+                    setIsAnalyzing(false);
+                  }
+                }}
+                disabled={isAnalyzing}
+                style={{
+                  background: isAnalyzing ? '#4a4563' : 'linear-gradient(to right, #8b5cf6, #7c3aed)',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  padding: '16px 32px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: isAnalyzing ? 'wait' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flex: 2,
+                  justifyContent: 'center',
+                  minWidth: '200px'
+                }}
+              >
+                <Sparkles style={{ width: '20px', height: '20px' }} />
+                {isAnalyzing ? 'Saving...' : 'Analyze My Journey'}
+              </button>
+            </div>
+          </>
         )}
       </div>
 
-      {/* Event Modal */}
-      <EventModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveEvent}
-        event={editingIndex !== null ? events[editingIndex] : undefined}
-      />
+      {/* Add Event Modal */}
+      {showModal && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.7)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            zIndex: 1000
+          }}
+          onClick={() => setShowModal(false)}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#1e1a2e',
+              borderRadius: '24px',
+              padding: '32px',
+              maxWidth: '600px',
+              width: '100%',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative'
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              style={{
+                position: 'absolute',
+                top: '24px',
+                right: '24px',
+                background: 'transparent',
+                border: 'none',
+                color: '#9ca3af',
+                cursor: 'pointer',
+                padding: '4px'
+              }}
+            >
+              <X style={{ width: '24px', height: '24px' }} />
+            </button>
+
+            <h2 style={{ fontSize: '28px', fontWeight: 'bold', color: 'white', marginBottom: '32px' }}>
+              Add Life Event
+            </h2>
+
+            {/* Year and Month */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '24px' }}>
+              <div>
+                <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px' }}>
+                  Year *
+                </label>
+                <select
+                  value={year}
+                  onChange={(e) => setYear(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#252036',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    color: 'white',
+                    fontSize: '16px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Select year</option>
+                  {years.map((y) => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px' }}>
+                  Month (optional)
+                </label>
+                <select
+                  value={month}
+                  onChange={(e) => setMonth(e.target.value)}
+                  style={{
+                    width: '100%',
+                    background: '#252036',
+                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                    borderRadius: '12px',
+                    padding: '12px 16px',
+                    color: 'white',
+                    fontSize: '16px',
+                    outline: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <option value="">Select month</option>
+                  {months.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Phase Selection */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '12px' }}>
+                How was this phase? *
+              </label>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {phases.map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setPhase(p)}
+                    style={{
+                      background: phase === p ? '#4a4563' : '#252036',
+                      border: phase === p ? '2px solid #6b7280' : '1px solid rgba(255, 255, 255, 0.1)',
+                      color: 'white',
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      fontWeight: phase === p ? '600' : '400'
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Rating Slider */}
+            <div style={{ marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <label style={{ color: '#9ca3af', fontSize: '14px' }}>Rating</label>
+                <span style={{ color: 'white', fontSize: '16px', fontWeight: '600' }}>
+                  {rating} · {phase}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="-10"
+                max="10"
+                value={rating}
+                onChange={(e) => setRating(parseInt(e.target.value))}
+                style={{
+                  width: '100%',
+                  height: '6px',
+                  borderRadius: '3px',
+                  background: `linear-gradient(to right, 
+                    #ef4444 0%, 
+                    #f97316 25%, 
+                    #6b7280 50%, 
+                    #3b82f6 75%, 
+                    #10b981 100%)`,
+                  outline: 'none',
+                  cursor: 'pointer'
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                <span style={{ color: '#6b7280', fontSize: '12px' }}>-10</span>
+                <span style={{ color: '#6b7280', fontSize: '12px' }}>0</span>
+                <span style={{ color: '#6b7280', fontSize: '12px' }}>+10</span>
+              </div>
+            </div>
+
+            {/* Description */}
+            <div style={{ marginBottom: '24px' }}>
+              <label style={{ display: 'block', color: '#9ca3af', fontSize: '14px', marginBottom: '8px' }}>
+                What happened? *
+              </label>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Describe this phase of your life..."
+                style={{
+                  width: '100%',
+                  background: '#252036',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  borderRadius: '12px',
+                  padding: '16px',
+                  color: 'white',
+                  fontSize: '16px',
+                  outline: 'none',
+                  minHeight: '120px',
+                  resize: 'vertical',
+                  fontFamily: 'inherit'
+                }}
+              />
+            </div>
+
+            {/* Buttons */}
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                onClick={() => setShowModal(false)}
+                style={{
+                  flex: 1,
+                  background: 'transparent',
+                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddEvent}
+                disabled={!year || !description}
+                style={{
+                  flex: 1,
+                  background: year && description ? 'linear-gradient(to right, #8b5cf6, #7c3aed)' : '#4a4563',
+                  color: 'white',
+                  fontWeight: '600',
+                  fontSize: '16px',
+                  padding: '14px',
+                  borderRadius: '12px',
+                  border: 'none',
+                  cursor: year && description ? 'pointer' : 'not-allowed',
+                  opacity: year && description ? 1 : 0.5
+                }}
+              >
+                Add Event
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

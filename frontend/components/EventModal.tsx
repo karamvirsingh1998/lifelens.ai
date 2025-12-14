@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import { LifeEvent } from "@/lib/api";
-import { getPhaseFromScore } from "@/lib/utils";
 
 interface EventModalProps {
   isOpen: boolean;
@@ -13,39 +12,46 @@ interface EventModalProps {
   event?: LifeEvent;
 }
 
-const phases = ["Very Low", "Low", "Neutral", "Good", "Very Good"];
+const phases = [
+  { label: "Very Low", value: "Very Low", score: -8 },
+  { label: "Low", value: "Low", score: -4 },
+  { label: "Neutral", value: "Moderate", score: 0 },
+  { label: "Good", value: "High", score: 6 },
+  { label: "Very Good", value: "Very High", score: 9 },
+];
+
 const currentYear = new Date().getFullYear();
 const years = Array.from({ length: 100 }, (_, i) => currentYear - i);
 const months = [
-  { value: 1, label: "January" },
-  { value: 2, label: "February" },
-  { value: 3, label: "March" },
-  { value: 4, label: "April" },
-  { value: 5, label: "May" },
-  { value: 6, label: "June" },
-  { value: 7, label: "July" },
-  { value: 8, label: "August" },
-  { value: 9, label: "September" },
-  { value: 10, label: "October" },
-  { value: 11, label: "November" },
-  { value: 12, label: "December" },
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December"
 ];
 
-const phaseToScore: Record<string, number> = {
-  "Very Low": -8,
-  "Low": -4,
-  "Neutral": 0,
-  "Good": 6,
-  "Very Good": 9,
-};
+function getPhaseFromScore(score: number): string {
+  if (score >= 8) return "Very High";
+  if (score >= 4) return "High";
+  if (score >= 0) return "Moderate";
+  if (score >= -4) return "Low";
+  return "Very Low";
+}
+
+function getPhaseLabel(phase: string): string {
+  const map: Record<string, string> = {
+    "Very High": "Very Good",
+    "High": "Good",
+    "Moderate": "Neutral",
+    "Low": "Low",
+    "Very Low": "Very Low",
+  };
+  return map[phase] || phase;
+}
 
 export default function EventModal({ isOpen, onClose, onSave, event }: EventModalProps) {
-  const [year, setYear] = useState<string>("");
-  const [month, setMonth] = useState<string>("");
-  const [selectedPhase, setSelectedPhase] = useState("Neutral");
+  const [year, setYear] = useState("");
+  const [month, setMonth] = useState("");
+  const [selectedPhase, setSelectedPhase] = useState("Moderate");
   const [score, setScore] = useState(0);
   const [description, setDescription] = useState("");
-  const [error, setError] = useState("");
 
   useEffect(() => {
     if (event) {
@@ -58,15 +64,14 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
       setYear("");
       setMonth("");
       setScore(0);
-      setSelectedPhase("Neutral");
+      setSelectedPhase("Moderate");
       setDescription("");
     }
-    setError("");
   }, [event, isOpen]);
 
-  const handlePhaseSelect = (phase: string) => {
+  const handlePhaseSelect = (phase: string, defaultScore: number) => {
     setSelectedPhase(phase);
-    setScore(phaseToScore[phase]);
+    setScore(defaultScore);
   };
 
   const handleScoreChange = (newScore: number) => {
@@ -78,33 +83,20 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!year) {
-      setError("Please select a year");
-      return;
-    }
-
-    if (!description.trim()) {
-      setError("Please describe what happened");
-      return;
-    }
-
-    const phase = getPhaseFromScore(score);
-
     onSave({
       year: parseInt(year),
       month: month ? parseInt(month) : undefined,
-      phase: phase as any,
+      phase: selectedPhase as any,
       score,
       description: description.trim(),
     });
 
-    // Reset form
+    // Reset
     setYear("");
     setMonth("");
     setScore(0);
-    setSelectedPhase("Neutral");
+    setSelectedPhase("Moderate");
     setDescription("");
-    setError("");
   };
 
   return (
@@ -117,7 +109,7 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={onClose}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50"
+            className="fixed inset-0 bg-black/70 z-50"
           />
 
           {/* Modal */}
@@ -129,7 +121,8 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
               transition={{ type: "spring", damping: 30, stiffness: 300 }}
               className="bg-dark-bg w-full sm:max-w-2xl sm:rounded-3xl rounded-t-3xl max-h-[90vh] overflow-y-auto"
             >
-              <div className="sticky top-0 bg-dark-bg/95 backdrop-blur-lg border-b border-white/10 p-6 flex items-center justify-between">
+              {/* Header */}
+              <div className="sticky top-0 bg-dark-bg border-b border-white/10 p-6 flex items-center justify-between z-10">
                 <h2 className="text-2xl font-bold text-white">
                   {event ? "Edit" : "Add"} Life Event
                 </h2>
@@ -141,6 +134,7 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                 </button>
               </div>
 
+              {/* Form */}
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 {/* Year & Month */}
                 <div className="grid grid-cols-2 gap-4">
@@ -156,9 +150,7 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                     >
                       <option value="">Select year</option>
                       {years.map((y) => (
-                        <option key={y} value={y}>
-                          {y}
-                        </option>
+                        <option key={y} value={y}>{y}</option>
                       ))}
                     </select>
                   </div>
@@ -173,10 +165,8 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                       className="input-field"
                     >
                       <option value="">Select month</option>
-                      {months.map((m) => (
-                        <option key={m.value} value={m.value}>
-                          {m.label}
-                        </option>
+                      {months.map((m, i) => (
+                        <option key={i} value={i + 1}>{m}</option>
                       ))}
                     </select>
                   </div>
@@ -187,21 +177,21 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                   <label className="block text-sm font-medium text-gray-400 mb-3">
                     How was this phase? <span className="text-red-400">*</span>
                   </label>
-                  <div className="flex flex-wrap gap-2 sm:gap-3">
-                    {phases.map((phase) => (
-                      <button
-                        key={phase}
-                        type="button"
-                        onClick={() => handlePhaseSelect(phase)}
-                        className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-medium transition-all ${
-                          selectedPhase === phase
-                            ? "bg-white text-dark-bg border-2 border-white"
-                            : "bg-transparent text-gray-400 border-2 border-white/20 hover:border-white/40"
-                        }`}
-                      >
-                        {phase}
-                      </button>
-                    ))}
+                  <div className="flex flex-wrap gap-2">
+                    {phases.map((phase) => {
+                      const phaseLabel = getPhaseLabel(phase.value);
+                      const currentPhaseLabel = getPhaseLabel(selectedPhase);
+                      return (
+                        <button
+                          key={phase.value}
+                          type="button"
+                          onClick={() => handlePhaseSelect(phase.value, phase.score)}
+                          className={`phase-btn ${phaseLabel === currentPhaseLabel ? "active" : ""}`}
+                        >
+                          {phase.label}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -211,8 +201,8 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                     <label className="text-sm font-medium text-gray-400">
                       Rating
                     </label>
-                    <span className="text-xl font-bold text-white">
-                      {score} : {selectedPhase}
+                    <span className="text-lg font-bold text-white">
+                      {score} : {getPhaseLabel(selectedPhase)}
                     </span>
                   </div>
                   <input
@@ -222,10 +212,7 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                     step="1"
                     value={score}
                     onChange={(e) => handleScoreChange(Number(e.target.value))}
-                    className="w-full h-2 bg-dark-lighter rounded-full appearance-none cursor-pointer accent-purple-500"
-                    style={{
-                      background: `linear-gradient(to right, #ef4444 0%, #f97316 25%, #6b7280 50%, #3b82f6 75%, #10b981 100%)`
-                    }}
+                    className="w-full"
                   />
                   <div className="flex justify-between text-xs text-gray-500 mt-2">
                     <span>-10</span>
@@ -242,18 +229,12 @@ export default function EventModal({ isOpen, onClose, onSave, event }: EventModa
                   <textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="input-field resize-none min-h-[120px]"
+                    className="input-field"
                     placeholder="Describe this phase of your life..."
                     required
+                    rows={4}
                   />
                 </div>
-
-                {/* Error */}
-                {error && (
-                  <div className="bg-red-500/10 border border-red-500/30 rounded-2xl p-4 text-red-400 text-sm">
-                    {error}
-                  </div>
-                )}
 
                 {/* Buttons */}
                 <div className="grid grid-cols-2 gap-3 pt-4">

@@ -3,10 +3,10 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
+import { Share2, Download, Sparkles } from "lucide-react";
 import { useAnalysisStore, useUserStore } from "@/lib/store";
 import TimelineGraph from "@/components/TimelineGraph";
 import InsightCards from "@/components/InsightCards";
-import { Download, Share2 } from "lucide-react";
 
 export default function Results() {
   const router = useRouter();
@@ -20,33 +20,42 @@ export default function Results() {
   }, [analysis, router]);
 
   if (!analysis) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return <div className="min-h-screen bg-dark-bg flex items-center justify-center">
+      <div className="text-gray-400">Loading...</div>
+    </div>;
   }
 
   return (
-    <div className="min-h-screen p-4 py-12">
-      <div className="max-w-7xl mx-auto">
-        {/* Hero Section */}
+    <div className="min-h-screen bg-dark-bg">
+      <div className="max-w-6xl mx-auto p-4 sm:p-6 md:p-8">
+        {/* Analysis Complete Badge */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <Sparkles className="w-4 h-4 text-orange-400" />
+          <span className="text-orange-400 text-sm font-medium">Analysis Complete</span>
+        </div>
+
+        {/* Hero Section with Gradient Title */}
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="text-center mb-16"
+          className="text-center mb-12"
         >
-          <h1 className="text-4xl md:text-6xl font-bold mb-4 bg-gradient-to-r from-primary-400 via-accent-violet to-accent-coral bg-clip-text text-transparent">
-            {analysis.hero_heading}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+            <span className="text-gradient">
+              {analysis.hero_heading}
+            </span>
           </h1>
-          <p className="text-xl text-white/70 max-w-3xl mx-auto">
+          <p className="text-gray-400 text-base sm:text-lg md:text-xl max-w-3xl mx-auto mb-8">
             {analysis.summary}
           </p>
 
-          {/* Action Buttons */}
-          <div className="flex flex-wrap gap-4 justify-center mt-8">
-            <button className="btn-secondary flex items-center gap-2">
+          {/* Share & Export Buttons */}
+          <div className="flex flex-col sm:flex-row gap-3 justify-center max-w-md mx-auto">
+            <button className="btn-secondary flex items-center justify-center gap-2 text-sm">
               <Share2 className="w-4 h-4" />
               Share
             </button>
-            <button className="btn-secondary flex items-center gap-2">
+            <button className="btn-secondary flex items-center justify-center gap-2 text-sm">
               <Download className="w-4 h-4" />
               Export
             </button>
@@ -57,8 +66,8 @@ export default function Results() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.6 }}
-          className="mb-16"
+          transition={{ delay: 0.2 }}
+          className="mb-12"
         >
           <TimelineGraph
             timeline={analysis.timeline}
@@ -71,7 +80,7 @@ export default function Results() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4, duration: 0.6 }}
+          transition={{ delay: 0.4 }}
         >
           <InsightCards
             insights={analysis.insights}
@@ -79,12 +88,12 @@ export default function Results() {
           />
         </motion.div>
 
-        {/* Footer CTA */}
+        {/* Update Journey Button */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.6, duration: 0.6 }}
-          className="text-center mt-16"
+          transition={{ delay: 0.6 }}
+          className="text-center mt-12 max-w-md mx-auto"
         >
           <button
             onClick={() => router.push("/events")}
@@ -97,4 +106,3 @@ export default function Results() {
     </div>
   );
 }
-

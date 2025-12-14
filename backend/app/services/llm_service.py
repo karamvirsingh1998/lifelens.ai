@@ -37,60 +37,82 @@ async def generate_llm_insights(user: User, events: List[LifeEvent]) -> Dict:
     
     user_age = 2024 - int(user.dob.split('-')[0])  # Approximate current age
     
-    prompt = f"""You are an empathetic life coach analyzing {user.name}'s emotional journey.
+    prompt = f"""You are analyzing {user.name}'s emotional journey with the depth and sensitivity of a master therapist.
 
-User Information:
-- Name: {user.name}
-- Date of Birth: {user.dob}
-- Current Age: ~{user_age} years
+User: {user.name}, Age {user_age}, Born {user.dob}
 
-Life Events (chronological):
+Life Events:
 {json.dumps(events_context, indent=2)}
 
-Please provide a comprehensive analysis in JSON format with the following structure:
+Generate deeply personalized insights in JSON format:
 
 {{
-  "hero_heading": "A powerful, personalized heading summarizing their journey (one sentence)",
-  "summary": "A warm, encouraging one-line summary of their emotional timeline",
+  "hero_heading": "A single profound sentence about their journey (not motivational, just true)",
+  "summary": "One reflective line about what their timeline reveals",
+  
   "rephrased_events": {{
-    "event_id": "Rephrased description that's more poetic and insightful",
-    ...
+    "event_id": "Transform into a narrative moment, not just description"
   }},
+  
+  "turning_points": [
+    {{
+      "event_id": "id_of_event",
+      "age": {user_age},
+      "year": 2020,
+      "type": "first_major_dip" | "strongest_recovery" | "longest_stable" | "recent_momentum",
+      "insight": "One line explaining why this moment mattered"
+    }}
+  ],
+  
+  "what_shaped_journey": [
+    {{
+      "chain": "Cause → Effect → Consequence",
+      "explanation": "Natural language reasoning connecting dots"
+    }}
+  ],
+  
+  "emotional_cycle": {{
+    "pattern_type": "phoenix" | "builder" | "overdrive" | "steady",
+    "cycle_description": "Their recurring loop in one sentence",
+    "visual_flow": "Build → Overextend → Dip → Recover"
+  }},
+  
   "llm_forecast": [
     {{
       "year": 2025,
       "score": 7.5,
       "phase": "High",
-      "reasoning": "Based on your resilience patterns and growth trajectory..."
-    }},
-    ... (5 years total)
+      "reasoning": "Intuitive, pattern-based reasoning"
+    }}
   ],
+  
+  "deep_insights": {{
+    "unspoken_rule": "A hidden rule they live by",
+    "pattern_name": "Give their journey a 2-3 word name",
+    "one_sentence": "One sentence that explains their entire life",
+    "blind_spot": "Gentle observation they may not see",
+    "personal_quote": "A quote derived FROM their data, signed — LifeLens",
+    "future_self_message": "2-3 sentences as if from 1 year ahead"
+  }},
+  
   "personalized_plan": [
     {{
-      "category": "high",
-      "title": "Bold Action",
-      "description": "A high-impact suggestion"
-    }},
-    {{
-      "category": "medium",
-      "title": "Steady Growth",
-      "description": "A moderate-impact suggestion"
-    }},
-    {{
-      "category": "gentle",
-      "title": "Small Step",
-      "description": "A gentle, easy suggestion"
+      "title": "Not generic advice - specific to THEIR pattern",
+      "why": "Why this matters for THEM specifically"
     }}
   ]
 }}
 
-Guidelines:
-1. Hero heading should be inspirational and personal
-2. Rephrase descriptions to be more eloquent while preserving meaning
-3. Predict scores based on emotional patterns, resilience, and growth trajectory
-4. Reasoning should feel intuitive, not mathematical
-5. Personalized plan should have 3 actionable items (high/medium/gentle impact)
-6. Map scores to phases: 8-10=Very High, 4-7=High, 0-3=Moderate, -3-0=Low, -10--3=Very Low
+CRITICAL RULES:
+- NO generic self-help language
+- NO clichés or motivational fluff  
+- BE SPECIFIC to their timeline
+- Use calm, reflective tone
+- Assume intelligence and maturity
+- Every insight must be screenshot-worthy
+- If you don't have enough data for an insight, be honest: "Your pattern is still emerging"
+
+Map scores: 8-10=Very High, 4-7=High, 0-3=Moderate, -3-0=Low, -10--3=Very Low
 """
 
     try:

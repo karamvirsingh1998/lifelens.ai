@@ -8,8 +8,8 @@ class Settings(BaseSettings):
     API_VERSION: str = "v1"
     DEBUG: bool = True
     
-    # Database
-    DATABASE_URL: str = "postgresql://user:password@localhost:5432/lifelens_db"
+    # Database - Use SQLite for local development by default
+    DATABASE_URL: str = "sqlite:///./lifelens.db"
     
     # OpenAI
     OPENAI_API_KEY: str = ""

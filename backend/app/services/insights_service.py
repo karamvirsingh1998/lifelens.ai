@@ -15,23 +15,17 @@ from collections import Counter
 
 def generate_insight_cards(events, statistical_forecast: List[Dict], llm_results: Dict) -> Dict:
     """
-    Generate all 6 insight cards with visualization data.
+    Generate premium, narrative-driven insights (not generic metrics).
     """
     insights = {}
     
-    # Card 1: Emotional Trajectory
-    insights["trajectory"] = generate_trajectory_insight(events)
+    # Use LLM-generated insights as primary source
+    insights["turning_points"] = llm_results.get("turning_points", [])
+    insights["what_shaped_journey"] = llm_results.get("what_shaped_journey", [])
+    insights["emotional_cycle"] = llm_results.get("emotional_cycle", {})
+    insights["deep_insights"] = llm_results.get("deep_insights", {})
     
-    # Card 2: What Shaped Your Journey
-    insights["contributors"] = generate_contributors_insight(events)
-    
-    # Card 3: Patterns & Cycles
-    insights["patterns"] = generate_patterns_insight(events)
-    
-    # Card 4: Seasonal Trends
-    insights["seasonal_trends"] = generate_seasonal_insight(events)
-    
-    # Card 5: Future Predictions Comparison
+    # Add prediction comparison
     insights["future_predictions"] = generate_comparison_insight(
         statistical_forecast,
         llm_results.get("llm_forecast", [])
