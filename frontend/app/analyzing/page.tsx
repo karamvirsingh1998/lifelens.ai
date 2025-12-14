@@ -591,58 +591,40 @@ export default function AnalyzingPage() {
           )}
         </div>
 
-        {/* Deep Insights Section - Out of the Box Personalization */}
-        {analysisData.insights?.deep_insights && (
-          <>
-            {/* Your Pattern Name */}
-            {analysisData.insights.deep_insights.pattern_name && (
-              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '24px', padding: '48px 32px', marginBottom: '32px', textAlign: 'center' }}>
-                <div style={{ fontSize: '14px', color: '#a78bfa', fontWeight: '600', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                  Your Pattern
-                </div>
-                <h2 style={{ fontSize: '48px', fontWeight: 'bold', color: 'white', marginBottom: '24px', lineHeight: '1.2' }}>
-                  {analysisData.insights.deep_insights.pattern_name}
-                </h2>
-                {analysisData.insights.deep_insights.one_sentence && (
-                  <p style={{ fontSize: '18px', color: '#d1d5db', lineHeight: '1.6', maxWidth: '800px', margin: '0 auto' }}>
-                    {analysisData.insights.deep_insights.one_sentence}
-                  </p>
-                )}
-              </div>
+        {/* Pattern Name - Simple & Clear */}
+        {analysisData.insights?.unique_insights?.pattern_name && (
+          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(139, 92, 246, 0.3)', borderRadius: '20px', padding: '32px', marginBottom: '32px', textAlign: 'center' }}>
+            <div style={{ fontSize: '12px', color: '#a78bfa', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
+              Your Pattern
+            </div>
+            <h2 style={{ fontSize: '36px', fontWeight: 'bold', color: 'white', marginBottom: '16px' }}>
+              {analysisData.insights.unique_insights.pattern_name}
+            </h2>
+            {analysisData.insights.unique_insights.one_truth && (
+              <p style={{ fontSize: '16px', color: '#d1d5db', lineHeight: '1.6', maxWidth: '700px', margin: '0 auto' }}>
+                {analysisData.insights.unique_insights.one_truth}
+              </p>
             )}
-
-            {/* Your Personal Quote */}
-            {analysisData.insights.deep_insights.personal_quote && (
-              <div style={{ background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(236, 72, 153, 0.1))', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '48px 40px', marginBottom: '32px' }}>
-                <div style={{ fontSize: '32px', color: 'white', fontStyle: 'italic', lineHeight: '1.5', marginBottom: '24px', fontWeight: '500' }}>
-                  "{analysisData.insights.deep_insights.personal_quote}"
-                </div>
-                <div style={{ fontSize: '14px', color: '#a78bfa', fontWeight: '600' }}>
-                  — LifeLens
-                </div>
-              </div>
-            )}
-          </>
+          </div>
         )}
 
-        {/* Turning Points Timeline */}
+        {/* Turning Points - Simplified */}
         {analysisData.insights?.turning_points && analysisData.insights.turning_points.length > 0 && (
-          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '32px', marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
-              Turning Points
+          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '28px', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '20px' }}>
+              Key Moments
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {analysisData.insights.turning_points.map((point: any, i: number) => (
-                <div key={i} style={{ display: 'flex', gap: '20px', alignItems: 'flex-start' }}>
-                  <div style={{ minWidth: '60px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '24px', fontWeight: 'bold', color: '#a78bfa' }}>{point.year}</div>
-                    <div style={{ fontSize: '12px', color: '#9ca3af' }}>Age {point.age}</div>
+                <div key={i} style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+                  <div style={{ minWidth: '50px', textAlign: 'center', paddingTop: '4px' }}>
+                    <div style={{ fontSize: '18px', fontWeight: 'bold', color: '#a78bfa' }}>{point.year}</div>
                   </div>
                   <div style={{ flex: 1, background: '#2d2640', borderRadius: '12px', padding: '16px' }}>
-                    <div style={{ fontSize: '12px', color: '#f97316', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px' }}>
+                    <div style={{ fontSize: '11px', color: '#f97316', fontWeight: '600', textTransform: 'uppercase', marginBottom: '6px' }}>
                       {point.type.replace(/_/g, ' ')}
                     </div>
-                    <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.6' }}>
+                    <div style={{ fontSize: '15px', color: 'white', lineHeight: '1.5' }}>
                       {point.insight}
                     </div>
                   </div>
@@ -652,19 +634,19 @@ export default function AnalyzingPage() {
           </div>
         )}
 
-        {/* What Shaped Your Journey - Cause → Effect */}
+        {/* What Shaped Your Journey - Simplified */}
         {analysisData.insights?.what_shaped_journey && analysisData.insights.what_shaped_journey.length > 0 && (
-          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '32px', marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
-              What Shaped Your Journey
+          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '28px', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '20px' }}>
+              What Shaped You
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {analysisData.insights.what_shaped_journey.map((item: any, i: number) => (
-                <div key={i} style={{ background: '#2d2640', borderRadius: '12px', padding: '20px' }}>
-                  <div style={{ fontSize: '18px', color: '#a78bfa', fontWeight: '600', marginBottom: '12px', fontFamily: 'monospace' }}>
+                <div key={i} style={{ background: '#2d2640', borderRadius: '12px', padding: '18px' }}>
+                  <div style={{ fontSize: '15px', color: '#a78bfa', fontWeight: '600', marginBottom: '10px' }}>
                     {item.chain}
                   </div>
-                  <div style={{ fontSize: '15px', color: '#d1d5db', lineHeight: '1.6' }}>
+                  <div style={{ fontSize: '14px', color: '#d1d5db', lineHeight: '1.5' }}>
                     {item.explanation}
                   </div>
                 </div>
@@ -673,46 +655,88 @@ export default function AnalyzingPage() {
           </div>
         )}
 
-        {/* Emotional Cycle */}
+        {/* Emotional Cycle - Simplified */}
         {analysisData.insights?.emotional_cycle && (
-          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '32px', marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
-              Your Emotional Cycle
+          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '28px', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '20px' }}>
+              Your Cycle
             </h3>
-            <div style={{ background: '#2d2640', borderRadius: '16px', padding: '32px', textAlign: 'center' }}>
-              <div style={{ fontSize: '28px', color: '#ec4899', fontWeight: '600', marginBottom: '20px', fontFamily: 'monospace' }}>
+            <div style={{ background: '#2d2640', borderRadius: '12px', padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '20px', color: '#ec4899', fontWeight: '600', marginBottom: '16px' }}>
                 {analysisData.insights.emotional_cycle.visual_flow}
               </div>
-              <div style={{ fontSize: '16px', color: '#d1d5db', lineHeight: '1.6', maxWidth: '600px', margin: '0 auto' }}>
+              <div style={{ fontSize: '15px', color: '#d1d5db', lineHeight: '1.5' }}>
                 {analysisData.insights.emotional_cycle.cycle_description}
               </div>
             </div>
           </div>
         )}
 
-        {/* Additional Deep Insights */}
-        {analysisData.insights?.deep_insights && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '24px', marginBottom: '32px' }}>
-            {/* Unspoken Rule */}
-            {analysisData.insights.deep_insights.unspoken_rule && (
-              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '32px' }}>
-                <div style={{ fontSize: '12px', color: '#a78bfa', fontWeight: '600', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-                  Your Unspoken Rule
+        {/* Unique Practical Insights - Grid */}
+        {analysisData.insights?.unique_insights && (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+            {analysisData.insights.unique_insights.hidden_rule && (
+              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', color: '#a78bfa', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase' }}>
+                  Your Hidden Rule
                 </div>
-                <div style={{ fontSize: '18px', color: 'white', lineHeight: '1.6', fontWeight: '500' }}>
-                  {analysisData.insights.deep_insights.unspoken_rule}
+                <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.5' }}>
+                  {analysisData.insights.unique_insights.hidden_rule}
                 </div>
               </div>
             )}
 
-            {/* Emotional Blind Spot */}
-            {analysisData.insights.deep_insights.blind_spot && (
-              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '32px' }}>
-                <div style={{ fontSize: '12px', color: '#f97316', fontWeight: '600', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>
-                  Your Blind Spot
+            {analysisData.insights.unique_insights.strength_they_dont_see && (
+              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase' }}>
+                  Strength You Don't See
                 </div>
-                <div style={{ fontSize: '18px', color: 'white', lineHeight: '1.6', fontWeight: '500' }}>
-                  {analysisData.insights.deep_insights.blind_spot}
+                <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.5' }}>
+                  {analysisData.insights.unique_insights.strength_they_dont_see}
+                </div>
+              </div>
+            )}
+
+            {analysisData.insights.unique_insights.warning_sign && (
+              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', color: '#f97316', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase' }}>
+                  Watch For This
+                </div>
+                <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.5' }}>
+                  {analysisData.insights.unique_insights.warning_sign}
+                </div>
+              </div>
+            )}
+
+            {analysisData.insights.unique_insights.opportunity && (
+              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', color: '#3b82f6', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase' }}>
+                  Opportunity
+                </div>
+                <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.5' }}>
+                  {analysisData.insights.unique_insights.opportunity}
+                </div>
+              </div>
+            )}
+
+            {analysisData.insights.unique_insights.what_works && (
+              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase' }}>
+                  What Works For You
+                </div>
+                <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.5' }}>
+                  {analysisData.insights.unique_insights.what_works}
+                </div>
+              </div>
+            )}
+
+            {analysisData.insights.unique_insights.what_doesnt && (
+              <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '16px', padding: '24px' }}>
+                <div style={{ fontSize: '11px', color: '#ef4444', fontWeight: '600', marginBottom: '12px', textTransform: 'uppercase' }}>
+                  What Doesn't Work
+                </div>
+                <div style={{ fontSize: '16px', color: 'white', lineHeight: '1.5' }}>
+                  {analysisData.insights.unique_insights.what_doesnt}
                 </div>
               </div>
             )}
@@ -720,38 +744,38 @@ export default function AnalyzingPage() {
         )}
 
         {/* Message From Future Self */}
-        {analysisData.insights?.deep_insights?.future_self_message && (
-          <div style={{ background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1))', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '24px', padding: '40px', marginBottom: '32px' }}>
-            <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '600', marginBottom: '16px', textTransform: 'uppercase', letterSpacing: '2px' }}>
-              A Message From Your Future Self
+        {analysisData.insights?.unique_insights?.future_self_note && (
+          <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.3)', borderRadius: '20px', padding: '32px', marginBottom: '32px' }}>
+            <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '600', marginBottom: '16px', textTransform: 'uppercase' }}>
+              From Your Future Self
             </div>
-            <div style={{ fontSize: '20px', color: 'white', lineHeight: '1.7', fontStyle: 'italic' }}>
-              {analysisData.insights.deep_insights.future_self_message}
+            <div style={{ fontSize: '18px', color: 'white', lineHeight: '1.6' }}>
+              {analysisData.insights.unique_insights.future_self_note}
             </div>
           </div>
         )}
 
-        {/* Future View - Math vs Intuition */}
+        {/* Future View - Simplified */}
         {analysisData.statistical_forecast && analysisData.llm_forecast && (
-          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '32px', marginBottom: '32px' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
-              Future View: Logic vs Intuition
+          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '28px', marginBottom: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '20px' }}>
+              What's Ahead
             </h3>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px', marginBottom: '24px' }}>
-              <div style={{ background: '#2d2640', borderRadius: '12px', padding: '20px', borderLeft: '4px solid #f97316' }}>
-                <div style={{ fontSize: '14px', color: '#f97316', fontWeight: '600', marginBottom: '12px' }}>
-                  WHAT MATH SAYS
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+              <div style={{ background: '#2d2640', borderRadius: '12px', padding: '18px', borderLeft: '3px solid #f97316' }}>
+                <div style={{ fontSize: '12px', color: '#f97316', fontWeight: '600', marginBottom: '10px' }}>
+                  Math Says
                 </div>
-                <div style={{ fontSize: '15px', color: '#d1d5db', lineHeight: '1.6' }}>
-                  Based on statistical patterns, your trajectory suggests {analysisData.statistical_forecast[0]?.phase.toLowerCase()} emotional states ahead.
+                <div style={{ fontSize: '14px', color: '#d1d5db', lineHeight: '1.5' }}>
+                  {analysisData.statistical_forecast[0]?.phase} states ahead
                 </div>
               </div>
-              <div style={{ background: '#2d2640', borderRadius: '12px', padding: '20px', borderLeft: '4px solid #3b82f6' }}>
-                <div style={{ fontSize: '14px', color: '#3b82f6', fontWeight: '600', marginBottom: '12px' }}>
-                  WHAT INTUITION SAYS
+              <div style={{ background: '#2d2640', borderRadius: '12px', padding: '18px', borderLeft: '3px solid #3b82f6' }}>
+                <div style={{ fontSize: '12px', color: '#3b82f6', fontWeight: '600', marginBottom: '10px' }}>
+                  Intuition Says
                 </div>
-                <div style={{ fontSize: '15px', color: '#d1d5db', lineHeight: '1.6' }}>
-                  {analysisData.llm_forecast[0]?.reasoning || "Your patterns suggest continued growth."}
+                <div style={{ fontSize: '14px', color: '#d1d5db', lineHeight: '1.5' }}>
+                  {analysisData.llm_forecast[0]?.reasoning || "Continued growth ahead"}
                 </div>
               </div>
             </div>
@@ -760,45 +784,44 @@ export default function AnalyzingPage() {
               const llmAvg = analysisData.llm_forecast.reduce((sum: number, f: any) => sum + f.score, 0) / analysisData.llm_forecast.length;
               const diff = Math.abs(mathAvg - llmAvg);
               return (
-                <div style={{ background: '#1a1625', borderRadius: '12px', padding: '20px', textAlign: 'center' }}>
-                  {diff < 1 ? (
-                    <div style={{ fontSize: '16px', color: '#10b981', fontWeight: '600' }}>
-                      ✓ Both perspectives align closely
-                    </div>
-                  ) : (
-                    <div style={{ fontSize: '16px', color: '#f59e0b', fontWeight: '600' }}>
-                      ⚡ These perspectives differ — your path may surprise you
-                    </div>
-                  )}
+                <div style={{ background: '#1a1625', borderRadius: '12px', padding: '16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '14px', color: diff < 1 ? '#10b981' : '#f59e0b', fontWeight: '600' }}>
+                    {diff < 1 ? '✓ Both agree' : '⚡ They differ'}
+                  </div>
                 </div>
               );
             })()}
           </div>
         )}
 
-        {/* Personalized Suggestions (if any) */}
-        {analysisData.personalized_plan && analysisData.personalized_plan.length > 0 && (
-          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '24px', padding: '32px' }}>
-            <h3 style={{ fontSize: '24px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
-              What This Means For You
+        {/* Actionable Insights */}
+        {analysisData.insights?.actionable_insights && analysisData.insights.actionable_insights.length > 0 && (
+          <div style={{ background: 'rgba(30, 26, 46, 0.5)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '20px', padding: '32px' }}>
+            <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: 'white', marginBottom: '24px' }}>
+              What To Do
             </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {analysisData.personalized_plan.map((plan: any, index: number) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {analysisData.insights.actionable_insights.map((action: any, index: number) => (
                 <div
                   key={index}
                   style={{
                     background: '#2d2640',
-                    borderLeft: '4px solid #a78bfa',
+                    borderLeft: '3px solid #a78bfa',
                     borderRadius: '12px',
-                    padding: '24px'
+                    padding: '20px'
                   }}
                 >
-                  <div style={{ fontSize: '18px', color: 'white', fontWeight: '600', marginBottom: '12px' }}>
-                    {plan.title}
+                  <div style={{ fontSize: '16px', color: 'white', fontWeight: '600', marginBottom: '8px' }}>
+                    {action.title}
                   </div>
-                  <div style={{ fontSize: '15px', color: '#d1d5db', lineHeight: '1.6' }}>
-                    {plan.why || plan.description}
+                  <div style={{ fontSize: '14px', color: '#9ca3af', marginBottom: '8px' }}>
+                    {action.why}
                   </div>
+                  {action.when && (
+                    <div style={{ fontSize: '12px', color: '#6b7280', fontStyle: 'italic' }}>
+                      When: {action.when}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

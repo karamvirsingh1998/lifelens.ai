@@ -15,15 +15,16 @@ from collections import Counter
 
 def generate_insight_cards(events, statistical_forecast: List[Dict], llm_results: Dict) -> Dict:
     """
-    Generate premium, narrative-driven insights (not generic metrics).
+    Generate unique, practical insights.
     """
     insights = {}
     
-    # Use LLM-generated insights as primary source
+    # Use LLM-generated insights
     insights["turning_points"] = llm_results.get("turning_points", [])
     insights["what_shaped_journey"] = llm_results.get("what_shaped_journey", [])
     insights["emotional_cycle"] = llm_results.get("emotional_cycle", {})
-    insights["deep_insights"] = llm_results.get("deep_insights", {})
+    insights["unique_insights"] = llm_results.get("unique_insights", {})
+    insights["actionable_insights"] = llm_results.get("actionable_insights", [])
     
     # Add prediction comparison
     insights["future_predictions"] = generate_comparison_insight(

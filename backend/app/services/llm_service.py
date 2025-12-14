@@ -37,44 +37,43 @@ async def generate_llm_insights(user: User, events: List[LifeEvent]) -> Dict:
     
     user_age = 2024 - int(user.dob.split('-')[0])  # Approximate current age
     
-    prompt = f"""You are analyzing {user.name}'s emotional journey with the depth and sensitivity of a master therapist.
+    prompt = f"""Analyze {user.name}'s life events and generate practical, unique insights. Use simple, direct English.
 
-User: {user.name}, Age {user_age}, Born {user.dob}
+User: {user.name}, Age {user_age}
 
-Life Events:
+Events:
 {json.dumps(events_context, indent=2)}
 
-Generate deeply personalized insights in JSON format:
+Return JSON:
 
 {{
-  "hero_heading": "A single profound sentence about their journey (not motivational, just true)",
-  "summary": "One reflective line about what their timeline reveals",
+  "hero_heading": "One clear sentence about their pattern (simple English)",
+  "summary": "What stands out in plain language",
   
   "rephrased_events": {{
-    "event_id": "Transform into a narrative moment, not just description"
+    "event_id": "Clear, simple rephrasing"
   }},
   
   "turning_points": [
     {{
-      "event_id": "id_of_event",
-      "age": {user_age},
+      "event_id": "id",
       "year": 2020,
-      "type": "first_major_dip" | "strongest_recovery" | "longest_stable" | "recent_momentum",
-      "insight": "One line explaining why this moment mattered"
+      "type": "first_dip" | "biggest_recovery" | "longest_stable" | "recent_change",
+      "insight": "Why this mattered - be specific and practical"
     }}
   ],
   
   "what_shaped_journey": [
     {{
-      "chain": "Cause → Effect → Consequence",
-      "explanation": "Natural language reasoning connecting dots"
+      "chain": "Work stress → emotional dip → withdrawal",
+      "explanation": "Simple cause-effect in plain English"
     }}
   ],
   
   "emotional_cycle": {{
-    "pattern_type": "phoenix" | "builder" | "overdrive" | "steady",
-    "cycle_description": "Their recurring loop in one sentence",
-    "visual_flow": "Build → Overextend → Dip → Recover"
+    "pattern_name": "The Overdrive Loop" | "The Steady Builder" | "The Phoenix" | "The Wave Rider",
+    "cycle_description": "What keeps happening in simple terms",
+    "visual_flow": "Build → Push → Dip → Recover"
   }},
   
   "llm_forecast": [
@@ -82,35 +81,38 @@ Generate deeply personalized insights in JSON format:
       "year": 2025,
       "score": 7.5,
       "phase": "High",
-      "reasoning": "Intuitive, pattern-based reasoning"
+      "reasoning": "Simple, practical reasoning"
     }}
   ],
   
-  "deep_insights": {{
-    "unspoken_rule": "A hidden rule they live by",
-    "pattern_name": "Give their journey a 2-3 word name",
-    "one_sentence": "One sentence that explains their entire life",
-    "blind_spot": "Gentle observation they may not see",
-    "personal_quote": "A quote derived FROM their data, signed — LifeLens",
-    "future_self_message": "2-3 sentences as if from 1 year ahead"
+  "unique_insights": {{
+    "pattern_name": "2-3 word name for their journey",
+    "one_truth": "One practical truth about their life pattern",
+    "hidden_rule": "A rule they follow without realizing it",
+    "blind_spot": "Something they might miss about themselves",
+    "strength_they_dont_see": "A strength they have but may not notice",
+    "warning_sign": "A pattern that could cause problems if ignored",
+    "opportunity": "A specific opportunity based on their pattern",
+    "what_works": "What actually works for them (based on data)",
+    "what_doesnt": "What doesn't work for them (based on data)",
+    "future_self_note": "Practical note from 1 year ahead"
   }},
   
-  "personalized_plan": [
+  "actionable_insights": [
     {{
-      "title": "Not generic advice - specific to THEIR pattern",
-      "why": "Why this matters for THEM specifically"
+      "title": "Specific action based on their pattern",
+      "why": "Why this matters for them",
+      "when": "When to do this"
     }}
   ]
 }}
 
-CRITICAL RULES:
-- NO generic self-help language
-- NO clichés or motivational fluff  
-- BE SPECIFIC to their timeline
-- Use calm, reflective tone
-- Assume intelligence and maturity
-- Every insight must be screenshot-worthy
-- If you don't have enough data for an insight, be honest: "Your pattern is still emerging"
+RULES:
+- Use simple, direct English - no flowery language
+- Be specific to THEIR data, not generic
+- Focus on practical, useful insights
+- Each insight should be unique and actionable
+- If not enough data, say "Pattern still forming"
 
 Map scores: 8-10=Very High, 4-7=High, 0-3=Moderate, -3-0=Low, -10--3=Very Low
 """
@@ -133,6 +135,25 @@ Map scores: 8-10=Very High, 4-7=High, 0-3=Moderate, -3-0=Low, -10--3=Very Low
         )
         
         result = json.loads(response.choices[0].message.content)
+        
+        # Ensure llm_forecast has proper structure and 5 years
+        if "llm_forecast" in result:
+            forecast = result["llm_forecast"]
+            if not isinstance(forecast, list):
+                forecast = []
+            # Ensure we have 5 years of forecast
+            if len(forecast) < 5:
+                last_year = max([e.year for e in events]) if events else 2024
+                last_score = events[-1].score if events else 5
+                for i in range(len(forecast), 5):
+                    forecast.append({
+                        "year": last_year + i + 1,
+                        "score": last_score,
+                        "phase": "Moderate",
+                        "reasoning": "Pattern still forming"
+                    })
+            result["llm_forecast"] = forecast[:5]  # Ensure exactly 5
+        
         return result
     
     except Exception as e:

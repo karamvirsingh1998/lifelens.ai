@@ -86,9 +86,14 @@ class InsightCard(BaseModel):
 
 
 class PersonalizedAction(BaseModel):
-    category: str  # high, medium, gentle
     title: str
-    description: str
+    why: Optional[str] = None
+    when: Optional[str] = None
+    description: Optional[str] = None  # For backward compatibility
+    category: Optional[str] = None  # For backward compatibility
+    
+    class Config:
+        extra = "allow"  # Allow extra fields
 
 
 class AnalysisResponse(BaseModel):
@@ -97,7 +102,7 @@ class AnalysisResponse(BaseModel):
     timeline: List[TimelineEvent]
     statistical_forecast: List[ForecastPoint]
     llm_forecast: List[ForecastPoint]
-    insights: Dict[str, InsightCard]
+    insights: Dict[str, Any]  # Flexible - can contain any structure
     personalized_plan: List[PersonalizedAction]
 
 

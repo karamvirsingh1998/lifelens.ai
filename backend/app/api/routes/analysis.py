@@ -46,7 +46,16 @@ async def analyze_life_journey(request: AnalysisRequest, db: Session = Depends(g
     try:
         # Generate statistical forecast
         print("🔵 BACKEND: Generating statistical forecast...")
-        statistical_forecast = generate_statistical_forecast(events)
+        statistical_forecast_raw = generate_statistical_forecast(events)
+        # Format to match ForecastPoint schema (remove month if present)
+        statistical_forecast = []
+        for f in statistical_forecast_raw:
+            statistical_forecast.append({
+                "year": f.get("year", 2025),
+                "score": f.get("score", 5.0),
+                "phase": f.get("phase", "Moderate"),
+                "reasoning": None
+            })
         print(f"🔵 BACKEND: Statistical forecast generated: {len(statistical_forecast)} points")
         print(f"🔵 BACKEND: First prediction: {statistical_forecast[0] if statistical_forecast else 'None'}")
         
@@ -56,7 +65,23 @@ async def analyze_life_journey(request: AnalysisRequest, db: Session = Depends(g
         print(f"🔵 BACKEND: LLM results received!")
         print(f"🔵 BACKEND: Hero heading: {llm_results.get('hero_heading', 'N/A')[:100]}")
         print(f"🔵 BACKEND: LLM forecast points: {len(llm_results.get('llm_forecast', []))}")
+        print(f"🔵 BACKEND: Actionable insights: {len(llm_results.get('actionable_insights', []))}")
         print(f"🔵 BACKEND: Personalized plan items: {len(llm_results.get('personalized_plan', []))}")
+        
+        # Ensure llm_forecast is properly formatted
+        llm_forecast = llm_results.get("llm_forecast", [])
+        if llm_forecast:
+            # Ensure each forecast point has required fields
+            formatted_forecast = []
+            for f in llm_forecast:
+                if isinstance(f, dict):
+                    formatted_forecast.append({
+                        "year": f.get("year", 2025),
+                        "score": f.get("score", 5.0),
+                        "phase": f.get("phase", "Moderate"),
+                        "reasoning": f.get("reasoning", "")
+                    })
+            llm_results["llm_forecast"] = formatted_forecast
         
         # Update events with rephrased descriptions
         for event in events:
@@ -82,6 +107,19 @@ async def analyze_life_journey(request: AnalysisRequest, db: Session = Depends(g
         print(f"🔵 BACKEND: Generated {len(insights)} insight cards")
         print(f"🔵 BACKEND: Insight keys: {list(insights.keys())}")
         
+        # Format personalized plan
+        actionable_insights = llm_results.get("actionable_insights", [])
+        personalized_plan = llm_results.get("personalized_plan", [])
+        
+        # Combine and format
+        plan_items = []
+        if actionable_insights:
+            plan_items = actionable_insights
+        elif personalized_plan:
+            plan_items = personalized_plan
+        
+        print(f"🔵 BACKEND: Plan items: {len(plan_items)}")
+        
         # Store analysis
         analysis = Analysis(
             user_id=request.user_id,
@@ -94,12 +132,12 @@ async def analyze_life_journey(request: AnalysisRequest, db: Session = Depends(g
         
         response_data = AnalysisResponse(
             hero_heading=llm_results.get("hero_heading", "Your Emotional Journey"),
-            summary=llm_results.get("summary", "Here's your emotional timeline from birth till today."),
+            summary=llm_results.get("summary", "Here's your emotional timeline."),
             timeline=timeline,
             statistical_forecast=statistical_forecast,
             llm_forecast=llm_results.get("llm_forecast", []),
             insights=insights,
-            personalized_plan=llm_results.get("personalized_plan", [])
+            personalized_plan=plan_items
         )
         
         print("🔵 BACKEND: Final response ready!")
@@ -113,5 +151,13 @@ async def analyze_life_journey(request: AnalysisRequest, db: Session = Depends(g
         return response_data
     
     except Exception as e:
+        import traceback
+        print("=" * 80)
+        print("🔵 BACKEND: ❌ ERROR OCCURRED!")
+        print(f"🔵 BACKEND: Error type: {type(e).__name__}")
+        print(f"🔵 BACKEND: Error message: {str(e)}")
+        print("🔵 BACKEND: Full traceback:")
+        traceback.print_exc()
+        print("=" * 80)
         raise HTTPException(status_code=500, detail=f"Error during analysis: {str(e)}")
 
